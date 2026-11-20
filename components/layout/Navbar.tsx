@@ -203,9 +203,8 @@ export function Navbar() {
                   <span>Dashboard</span>
                 </DropdownMenuItem>
 
-                {/* Profile Settings */}
                 <DropdownMenuItem
-                  onClick={() => router.push("/dashboard/profile")}
+                  onClick={() => router.push("/profile")}
                   className="cursor-pointer gap-2.5 px-2.5 py-2 text-sm text-foreground focus:bg-primary/10 focus:text-primary rounded-md"
                 >
                   <UserIcon className="size-4 text-muted-foreground" />
@@ -353,7 +352,7 @@ export function Navbar() {
                       </Link>
 
                       <Link
-                        href="/dashboard/profile"
+                        href="/profile"
                         onClick={() => setMobileMenuOpen(false)}
                         className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
                       >
