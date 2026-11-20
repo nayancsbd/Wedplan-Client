@@ -7,16 +7,21 @@ export interface ServiceItem {
   id: string
   title: string
   category: string
+  vendorId?: string
   vendorName?: string
+  vendorEmail?: string
+  vendorAvatar?: string
   location?: string
   startingPrice: number
   priceRange?: string
   rating?: number
   reviewCount?: number
   imageUrl?: string
+  images: string[]
   featured?: boolean
   status?: string
   description?: string
+  inclusions?: string[]
 }
 
 export function normalizeService(raw: unknown): ServiceItem {
@@ -26,6 +31,7 @@ export function normalizeService(raw: unknown): ServiceItem {
       title: "",
       category: "",
       startingPrice: 0,
+      images: [],
     }
   }
 
@@ -48,7 +54,15 @@ export function normalizeService(raw: unknown): ServiceItem {
     (typeof obj.categoryName === "string" ? obj.categoryName : "") ||
     "Services"
 
+  let vendorId =
+    (typeof obj.vendorId === "string" ? obj.vendorId : "") ||
+    (typeof obj.userId === "string" ? obj.userId : "") ||
+    (typeof obj.vendor_id === "string" ? obj.vendor_id : "")
+
   let vendorName = ""
+  let vendorEmail = typeof obj.vendorEmail === "string" ? obj.vendorEmail : ""
+  let vendorAvatar = typeof obj.vendorAvatar === "string" ? obj.vendorAvatar : ""
+
   if (typeof obj.vendor === "string") {
     vendorName = obj.vendor
   } else if (obj.vendor && typeof obj.vendor === "object") {
@@ -60,7 +74,23 @@ export function normalizeService(raw: unknown): ServiceItem {
       (typeof vendorObj.name === "string" ? vendorObj.name : "") ||
       (typeof vendorObj.fullName === "string" ? vendorObj.fullName : "") ||
       ""
+
+    if (!vendorId) {
+      vendorId =
+        (typeof vendorObj.id === "string" ? vendorObj.id : "") ||
+        (typeof vendorObj._id === "string" ? vendorObj._id : "") ||
+        (vendorObj.id ? String(vendorObj.id) : "") ||
+        (vendorObj._id ? String(vendorObj._id) : "")
+    }
+
+    if (!vendorEmail && typeof vendorObj.email === "string") {
+      vendorEmail = vendorObj.email
+    }
+    if (!vendorAvatar && typeof vendorObj.image === "string") {
+      vendorAvatar = vendorObj.image
+    }
   }
+
   if (!vendorName) {
     vendorName =
       (typeof obj.vendorName === "string" ? obj.vendorName : "") ||
@@ -84,16 +114,26 @@ export function normalizeService(raw: unknown): ServiceItem {
     (typeof obj.imageUrl === "string" ? obj.imageUrl : "") ||
     (typeof obj.image === "string" ? obj.image : "")
 
-  if (!imageUrl && Array.isArray(obj.images) && obj.images.length > 0) {
-    const firstImg = obj.images[0]
-    if (typeof firstImg === "string") {
-      imageUrl = firstImg
-    } else if (firstImg && typeof firstImg === "object") {
-      const imgObj = firstImg as Record<string, unknown>
-      if (typeof imgObj.url === "string") {
-        imageUrl = imgObj.url
+  const images: string[] = []
+  if (Array.isArray(obj.images)) {
+    for (const img of obj.images) {
+      if (typeof img === "string" && img.trim()) {
+        images.push(img.trim())
+      } else if (img && typeof img === "object") {
+        const imgObj = img as Record<string, unknown>
+        if (typeof imgObj.url === "string" && imgObj.url.trim()) {
+          images.push(imgObj.url.trim())
+        }
       }
     }
+  }
+
+  if (imageUrl && !images.includes(imageUrl)) {
+    images.unshift(imageUrl)
+  }
+
+  if (!imageUrl && images.length > 0) {
+    imageUrl = images[0]
   }
 
   const rating =
@@ -119,19 +159,34 @@ export function normalizeService(raw: unknown): ServiceItem {
   const priceRange =
     typeof obj.priceRange === "string" ? obj.priceRange : undefined
 
+  const inclusions: string[] = []
+  const rawInclusions = obj.inclusions || obj.features || obj.highlights
+  if (Array.isArray(rawInclusions)) {
+    for (const inc of rawInclusions) {
+      if (typeof inc === "string" && inc.trim()) {
+        inclusions.push(inc.trim())
+      }
+    }
+  }
+
   return {
     id,
     title,
     category,
+    vendorId,
     vendorName,
+    vendorEmail,
+    vendorAvatar,
     location,
     startingPrice: isNaN(startingPrice) ? 0 : startingPrice,
     priceRange,
     rating,
     reviewCount,
     imageUrl,
+    images,
     featured,
     status,
     description,
+    inclusions,
   }
 }
