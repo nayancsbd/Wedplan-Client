@@ -224,7 +224,7 @@ export default function VendorDashboardPage() {
           <h2 className="font-serif text-xl font-semibold text-foreground">
             Recent Booking Requests
           </h2>
-          <Link href="/dashboard/vendor/bookings">
+          <Link href="/dashboard/vendor/booking-requests">
             <Button variant="ghost" size="sm" className="gap-1.5 text-xs cursor-pointer">
               <span>View All Requests</span>
               <ArrowRight className="size-3.5" />

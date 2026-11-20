@@ -47,7 +47,7 @@ const VENDOR_NAV_ITEMS: NavItem[] = [
   { title: "Overview", href: "/dashboard/vendor", icon: LayoutDashboard },
   { title: "My Services", href: "/dashboard/vendor/services", icon: Layers },
   { title: "Add Service", href: "/dashboard/vendor/services/new", icon: PlusCircle },
-  { title: "Booking Requests", href: "/dashboard/vendor/bookings", icon: CalendarHeart },
+  { title: "Booking Requests", href: "/dashboard/vendor/booking-requests", icon: CalendarHeart },
   { title: "Subscription", href: "/dashboard/vendor/subscription", icon: CreditCard },
   { title: "Profile Settings", href: "/dashboard/vendor/profile", icon: UserCog },
 ]
