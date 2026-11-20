@@ -1,0 +1,5 @@
+export { HeroBanner } from "./HeroBanner"
+export { FeaturedServices } from "./FeaturedServices"
+export { ServiceCategories } from "./ServiceCategories"
+export { WhyChooseUs } from "./WhyChooseUs"
+export { HowItWorks } from "./HowItWorks"
