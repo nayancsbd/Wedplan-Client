@@ -10,10 +10,13 @@ export interface User {
   name: string
   email: string
   role: UserRole
+  isBlocked?: boolean
+  businessName?: string
+  subscriptionPlan?: string
   image?: string | null
   phone?: string | null
-  createdAt?: string
-  updatedAt?: string
+  createdAt?: string | Date
+  updatedAt?: string | Date
 }
 
 export type ServiceCategory =
