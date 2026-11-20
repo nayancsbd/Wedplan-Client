@@ -9,6 +9,9 @@ import {
   Lock,
   Crown,
   Store,
+  AlertCircle,
+  X,
+  RotateCcw,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -36,6 +39,7 @@ export function ProfileSettingsForm({
 }: ProfileSettingsFormProps) {
   const { user, refetch } = useAuth()
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
+  const lastSelectedFileRef = React.useRef<File | null>(null)
 
   const [name, setName] = React.useState(user?.name || "")
   const [image, setImage] = React.useState(user?.image || "")
@@ -50,6 +54,7 @@ export function ProfileSettingsForm({
   )
 
   const [isUploadingImage, setIsUploadingImage] = React.useState(false)
+  const [uploadError, setUploadError] = React.useState<string | null>(null)
   const [isSaving, setIsSaving] = React.useState(false)
 
   const role = user?.role || "customer"
@@ -92,10 +97,7 @@ export function ProfileSettingsForm({
     }
   }, [])
 
-  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  const uploadFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload a valid image file (PNG, JPG, WEBP).")
       return
@@ -106,9 +108,11 @@ export function ProfileSettingsForm({
       return
     }
 
+    lastSelectedFileRef.current = file
     const localPreview = URL.createObjectURL(file)
     setImage(localPreview)
     setIsUploadingImage(true)
+    setUploadError(null)
 
     try {
       const formData = new FormData()
@@ -147,14 +151,15 @@ export function ProfileSettingsForm({
 
       if (uploadedUrl) {
         setImage(uploadedUrl)
+        setUploadError(null)
         toast.success("Profile photo uploaded successfully")
       } else {
-        setImage(localPreview)
-        toast.info("Photo preview attached")
+        setUploadError("Image could not be permanently saved on server. You can retry.")
+        toast.error("Failed to upload photo to image storage. Click Retry to try again.")
       }
     } catch {
-      setImage(localPreview)
-      toast.info("Photo preview attached")
+      setUploadError("Network error occurred during image upload.")
+      toast.error("Photo upload failed. Please check your internet and try again.")
     } finally {
       setIsUploadingImage(false)
       if (fileInputRef.current) {
@@ -163,8 +168,24 @@ export function ProfileSettingsForm({
     }
   }
 
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await uploadFile(file)
+  }
+
+  const handleRetryUpload = () => {
+    if (lastSelectedFileRef.current) {
+      uploadFile(lastSelectedFileRef.current)
+    } else {
+      fileInputRef.current?.click()
+    }
+  }
+
   const handleRemovePhoto = () => {
     setImage("")
+    setUploadError(null)
+    lastSelectedFileRef.current = null
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
     }
@@ -332,6 +353,40 @@ export function ProfileSettingsForm({
           </Link>
         )}
       </div>
+
+      {uploadError && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-destructive">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="size-4 shrink-0" />
+            <span>{uploadError}</span>
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isUploadingImage}
+              onClick={handleRetryUpload}
+              className="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer gap-1.5"
+            >
+              {isUploadingImage ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                <RotateCcw className="size-3" />
+              )}
+              <span>Retry Upload</span>
+            </Button>
+            <button
+              type="button"
+              onClick={() => setUploadError(null)}
+              className="p-1 text-muted-foreground hover:text-foreground cursor-pointer rounded-md"
+              title="Dismiss"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <input

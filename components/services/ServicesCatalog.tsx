@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
-import { Search, X, ChevronLeft, ChevronRight, Filter } from "lucide-react"
+import { Search, X, ChevronLeft, ChevronRight, Filter, AlertCircle, RotateCcw } from "lucide-react"
 
 import { useAuth } from "@/hooks/use-auth"
 import { ServiceCard } from "@/components/shared/ServiceCard"
@@ -39,31 +39,29 @@ export function ServicesCatalog() {
   const searchParams = useSearchParams()
   const { isAuthenticated } = useAuth()
 
-  // Read URL query parameters
   const querySearch = searchParams.get("search") || ""
   const queryCategory = searchParams.get("category") || "all"
   const queryLocation = searchParams.get("location") || "all"
   const querySort = searchParams.get("sort") || "newest"
   const queryPage = parseInt(searchParams.get("page") || "1", 10) || 1
 
-  // Local state for debounced search input
   const [prevQuerySearch, setPrevQuerySearch] = React.useState(querySearch)
   const [searchInput, setSearchInput] = React.useState(querySearch)
 
-  // Sync search input when external URL query changes (state mirroring during render)
   if (querySearch !== prevQuerySearch) {
     setPrevQuerySearch(querySearch)
     setSearchInput(querySearch)
   }
 
-  // Pure dynamic data states (no hardcoded fallbacks)
   const [locations, setLocations] = React.useState<string[]>([])
   const [services, setServices] = React.useState<ServiceItem[]>([])
   const [totalCount, setTotalCount] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [isLoading, setIsLoading] = React.useState(true)
+  const [isError, setIsError] = React.useState(false)
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
+  const [retryTrigger, setRetryTrigger] = React.useState(0)
 
-  // Fetch available locations dynamically from GET /api/services/locations
   React.useEffect(() => {
     let isMounted = true
     const fetchLocations = async () => {
@@ -107,7 +105,6 @@ export function ServicesCatalog() {
     }
   }, [])
 
-  // Helper to update URL query params with new filter values
   const updateQueryParams = React.useCallback(
     (newParams: {
       search?: string
@@ -166,7 +163,6 @@ export function ServicesCatalog() {
     [router, pathname, searchParams, querySearch, queryCategory, queryLocation, querySort, queryPage]
   )
 
-  // Debounced search effect: updates URL 350ms after user pauses typing
   React.useEffect(() => {
     const handler = setTimeout(() => {
       if (searchInput !== querySearch) {
@@ -177,12 +173,13 @@ export function ServicesCatalog() {
     return () => clearTimeout(handler)
   }, [searchInput, querySearch, updateQueryParams])
 
-  // Fetch approved & active services dynamically from GET /api/services
   React.useEffect(() => {
     let isMounted = true
 
     const fetchServices = async () => {
       setIsLoading(true)
+      setIsError(false)
+      setErrorMessage(null)
 
       try {
         const queryParams = new URLSearchParams()
@@ -241,12 +238,16 @@ export function ServicesCatalog() {
           setTotalCount(total)
           setTotalPages(pages)
         } else {
+          setIsError(true)
+          setErrorMessage(`Unable to load wedding services (Status ${res.status}).`)
           setServices([])
           setTotalCount(0)
           setTotalPages(1)
         }
       } catch {
         if (isMounted) {
+          setIsError(true)
+          setErrorMessage("Network connection error or wedding directory server is currently unavailable.")
           setServices([])
           setTotalCount(0)
           setTotalPages(1)
@@ -263,12 +264,15 @@ export function ServicesCatalog() {
     return () => {
       isMounted = false
     }
-  }, [querySearch, queryCategory, queryLocation, querySort, queryPage])
+  }, [querySearch, queryCategory, queryLocation, querySort, queryPage, retryTrigger])
 
-  // Clear all filters handler
   const handleClearFilters = () => {
     setSearchInput("")
     router.push(pathname)
+  }
+
+  const handleRetry = () => {
+    setRetryTrigger((prev) => prev + 1)
   }
 
   const hasActiveFilters =
@@ -279,11 +283,8 @@ export function ServicesCatalog() {
 
   return (
     <div className="space-y-8">
-      {/* Controls & Filter Bar */}
       <div className="rounded-2xl border border-border/80 bg-card p-4 sm:p-6 shadow-xs space-y-4">
-        {/* Top Controls: Search + Select Filters */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
-          {/* Search Input (Debounced) */}
           <div className="relative sm:col-span-2 lg:col-span-4">
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
             <Input
@@ -308,7 +309,6 @@ export function ServicesCatalog() {
             )}
           </div>
 
-          {/* Category Filter */}
           <div className="lg:col-span-3">
             <div className="relative">
               <select
@@ -328,7 +328,6 @@ export function ServicesCatalog() {
             </div>
           </div>
 
-          {/* Location Filter (from /api/services/locations) */}
           <div className="lg:col-span-3">
             <div className="relative">
               <select
@@ -349,7 +348,6 @@ export function ServicesCatalog() {
             </div>
           </div>
 
-          {/* Sort Filter */}
           <div className="lg:col-span-2">
             <div className="relative">
               <select
@@ -370,7 +368,6 @@ export function ServicesCatalog() {
           </div>
         </div>
 
-        {/* Active Filter Badges & Summary */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3 text-xs">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-muted-foreground flex items-center gap-1">
@@ -465,9 +462,8 @@ export function ServicesCatalog() {
             )}
           </div>
 
-          {/* Total Results Count */}
           <div className="text-muted-foreground font-medium">
-            {!isLoading && (
+            {!isLoading && !isError && (
               <span>
                 Showing {services.length} of {totalCount} services
               </span>
@@ -476,7 +472,6 @@ export function ServicesCatalog() {
         </div>
       </div>
 
-      {/* Services Grid or Empty/Loading States */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -496,6 +491,40 @@ export function ServicesCatalog() {
               </div>
             </div>
           ))}
+        </div>
+      ) : isError ? (
+        <div className="rounded-3xl border border-destructive/20 bg-destructive/5 p-8 text-center space-y-4">
+          <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+            <AlertCircle className="size-6" />
+          </div>
+          <div className="space-y-1 max-w-md mx-auto">
+            <h3 className="font-serif text-lg font-bold text-foreground">
+              Unable to Load Wedding Services
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {errorMessage || "We encountered an issue connecting to the directory. Please check your internet or retry."}
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Button
+              onClick={handleRetry}
+              size="sm"
+              className="gap-1.5 cursor-pointer"
+            >
+              <RotateCcw className="size-3.5" />
+              <span>Retry</span>
+            </Button>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearFilters}
+                className="cursor-pointer"
+              >
+                Clear Filters
+              </Button>
+            )}
+          </div>
         </div>
       ) : services.length === 0 ? (
         <EmptyState
@@ -518,8 +547,6 @@ export function ServicesCatalog() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((item) => {
-            // "View Details" on a card sends unauthenticated users to /signin?callbackUrl=/services/ID
-            // and authenticated users to /services/ID
             const detailHref = isAuthenticated
               ? `/services/${item.id}`
               : `/signin?callbackUrl=${encodeURIComponent(`/services/${item.id}`)}`
@@ -545,8 +572,7 @@ export function ServicesCatalog() {
         </div>
       )}
 
-      {/* Pagination Controls */}
-      {!isLoading && totalPages > 1 && (
+      {!isLoading && !isError && totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-border/70 pt-8">
           <p className="text-xs text-muted-foreground order-2 sm:order-1">
             Page <span className="font-semibold text-foreground">{queryPage}</span> of{" "}
@@ -554,7 +580,6 @@ export function ServicesCatalog() {
           </p>
 
           <div className="flex items-center gap-1.5 order-1 sm:order-2">
-            {/* Previous Page Button */}
             <Button
               variant="outline"
               size="sm"
@@ -569,13 +594,11 @@ export function ServicesCatalog() {
               <span className="hidden sm:inline">Previous</span>
             </Button>
 
-            {/* Page Numbers */}
             <div className="flex items-center gap-1">
               {Array.from({ length: totalPages }).map((_, idx) => {
                 const pageNumber = idx + 1
                 const isActive = pageNumber === queryPage
 
-                // Display first page, last page, and pages immediately adjacent to current page
                 if (
                   pageNumber === 1 ||
                   pageNumber === totalPages ||
@@ -595,7 +618,6 @@ export function ServicesCatalog() {
                   )
                 }
 
-                // Ellipsis for omitted ranges
                 if (
                   pageNumber === queryPage - 2 ||
                   pageNumber === queryPage + 2
@@ -614,7 +636,6 @@ export function ServicesCatalog() {
               })}
             </div>
 
-            {/* Next Page Button */}
             <Button
               variant="outline"
               size="sm"

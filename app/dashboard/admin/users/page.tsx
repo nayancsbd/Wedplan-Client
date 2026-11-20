@@ -14,6 +14,7 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
+  AlertTriangle,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -67,6 +68,7 @@ export default function AdminUsersPage() {
   const [actingUserId, setActingUserId] = React.useState<string | null>(null)
   const [currentPage, setCurrentPage] = React.useState(1)
   const [refreshTrigger, setRefreshTrigger] = React.useState(0)
+  const [hasError, setHasError] = React.useState(false)
 
   const pageSize = 10
 
@@ -126,10 +128,12 @@ export default function AdminUsersPage() {
 
         if (isMounted) {
           setUsers(rawList)
+          setHasError(false)
         }
       } catch {
         if (isMounted) {
           setUsers([])
+          setHasError(true)
         }
       } finally {
         if (isMounted) {
@@ -285,6 +289,25 @@ export default function AdminUsersPage() {
           />
         </div>
       </div>
+
+      {hasError && (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-5 flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="size-5 text-destructive shrink-0" />
+            <p className="text-foreground">
+              Unable to load platform users. Please check your network or try again.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            className="h-8 text-xs cursor-pointer"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-3">

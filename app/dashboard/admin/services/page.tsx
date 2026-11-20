@@ -17,6 +17,7 @@ import {
   Clock,
   MoreVertical,
   Eye,
+  AlertTriangle,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -83,6 +84,7 @@ const CATEGORIES = [
 export default function AdminServicesPage() {
   const [services, setServices] = React.useState<AdminServiceItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [hasError, setHasError] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all")
   const [categoryFilter, setCategoryFilter] = React.useState("All Categories")
@@ -163,10 +165,12 @@ export default function AdminServicesPage() {
 
         if (isMounted) {
           setServices(rawList)
+          setHasError(false)
         }
       } catch {
         if (isMounted) {
           setServices([])
+          setHasError(true)
         }
       } finally {
         if (isMounted) {
@@ -355,6 +359,25 @@ export default function AdminServicesPage() {
           </div>
         </div>
       </div>
+
+      {hasError && (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-5 flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="size-5 text-destructive shrink-0" />
+            <p className="text-foreground">
+              Unable to load marketplace services. Please check your network or try again.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            className="h-8 text-xs cursor-pointer"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-3">

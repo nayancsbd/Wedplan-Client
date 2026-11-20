@@ -13,6 +13,7 @@ import {
   Receipt,
   ArrowRight,
   ExternalLink,
+  AlertTriangle,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -48,6 +49,12 @@ export default function VendorSubscriptionPage() {
   const [subscription, setSubscription] = React.useState<SubscriptionData | null>(null)
   const [transactions, setTransactions] = React.useState<VendorTransaction[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [hasError, setHasError] = React.useState(false)
+  const [refreshTrigger, setRefreshTrigger] = React.useState(0)
+
+  const refetch = React.useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1)
+  }, [])
 
   React.useEffect(() => {
     let isMounted = true
@@ -123,10 +130,12 @@ export default function VendorSubscriptionPage() {
 
         if (isMounted) {
           setTransactions(txList)
+          setHasError(false)
         }
       } catch {
         if (isMounted) {
           setTransactions([])
+          setHasError(true)
         }
       } finally {
         if (isMounted) {
@@ -140,7 +149,7 @@ export default function VendorSubscriptionPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [refreshTrigger])
 
   const rawUserPlan = (user as unknown as { subscriptionPlan?: string })?.subscriptionPlan
   const isPremium =
@@ -304,6 +313,25 @@ export default function VendorSubscriptionPage() {
         description="Expand your wedding reach, unlock unlimited active listings, and gain a trusted Premium Vendor badge."
         centered={false}
       />
+
+      {hasError && (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-5 flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="size-5 text-destructive shrink-0" />
+            <p className="text-foreground">
+              Unable to load your subscription data and transactions. Please check your network or try again.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            className="h-8 text-xs cursor-pointer"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">

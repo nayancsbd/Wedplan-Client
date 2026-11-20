@@ -11,6 +11,7 @@ import {
   Search,
   Loader2,
   CalendarHeart,
+  AlertTriangle,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -171,6 +172,7 @@ function normalizeBooking(raw: unknown): BookingRequestItem {
 export default function VendorBookingRequestsPage() {
   const [bookings, setBookings] = React.useState<BookingRequestItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [hasError, setHasError] = React.useState(false)
   const [refreshTrigger, setRefreshTrigger] = React.useState(0)
   const [statusFilter, setStatusFilter] = React.useState<string>("all")
   const [searchQuery, setSearchQuery] = React.useState<string>("")
@@ -228,12 +230,15 @@ export default function VendorBookingRequestsPage() {
 
           const normalized = rawList.map(normalizeBooking)
           setBookings(normalized)
+          setHasError(false)
         } else {
           setBookings([])
+          setHasError(true)
         }
       } catch {
         if (isMounted) {
           setBookings([])
+          setHasError(true)
         }
       } finally {
         if (isMounted) {
@@ -453,6 +458,25 @@ export default function VendorBookingRequestsPage() {
           </div>
         </div>
       </div>
+
+      {hasError && (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-5 flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="size-5 text-destructive shrink-0" />
+            <p className="text-foreground">
+              Unable to load your booking requests. Please check your connection or retry.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            className="h-8 text-xs cursor-pointer"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-4">

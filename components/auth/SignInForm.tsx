@@ -76,7 +76,6 @@ export function SignInForm() {
     },
   })
 
-  // Redirect already-logged-in users away from signin
   React.useEffect(() => {
     if (!isAuthChecking && isAuthenticated && user) {
       const target =
@@ -90,7 +89,6 @@ export function SignInForm() {
     }
   }, [isAuthChecking, isAuthenticated, user, callbackUrl, router])
 
-  // Email / Password Form Submission
   const onSubmit = async (values: SignInFormValues) => {
     setIsSubmitting(true)
     setAuthErrorBanner(null)
@@ -105,7 +103,6 @@ export function SignInForm() {
         const errMsg = res.error.message?.toLowerCase() || ""
         const errCode = (res.error as { code?: string })?.code?.toLowerCase() || ""
 
-        // Handle blocked account error
         if (
           errMsg.includes("blocked") ||
           errMsg.includes("suspended") ||
@@ -120,7 +117,6 @@ export function SignInForm() {
           return
         }
 
-        // Handle invalid credentials error
         if (
           errMsg.includes("invalid") ||
           errMsg.includes("credential") ||
@@ -136,7 +132,6 @@ export function SignInForm() {
           return
         }
 
-        // Other generic errors
         const message = res.error.message || "Failed to sign in. Please try again."
         setAuthErrorBanner(message)
         toast.error(message)
@@ -144,7 +139,6 @@ export function SignInForm() {
         return
       }
 
-      // Check if user object returned is blocked
       const signedInUser = res.data?.user as {
         role?: string
         isBlocked?: boolean
@@ -162,7 +156,6 @@ export function SignInForm() {
 
       toast.success("Welcome back to WedPlan!")
 
-      // Redirect by role or callbackUrl
       const userRole = signedInUser?.role || "customer"
       const target =
         callbackUrl ||
@@ -182,7 +175,6 @@ export function SignInForm() {
     }
   }
 
-  // Google Social Sign In
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true)
     setAuthErrorBanner(null)
@@ -207,7 +199,6 @@ export function SignInForm() {
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm">
-      {/* Header */}
       <div className="text-center space-y-2 pb-6">
         <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary mb-2">
           <Heart className="size-5 fill-primary text-primary" />
@@ -220,18 +211,15 @@ export function SignInForm() {
         </p>
       </div>
 
-      {/* Error Banner */}
       {authErrorBanner && (
-        <div
-          role="alert"
-          className="mb-5 flex items-start gap-2.5 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-foreground"
-        >
-          <AlertCircle className="size-4 shrink-0 text-destructive mt-0.5" />
-          <p className="font-medium leading-relaxed">{authErrorBanner}</p>
+        <div className="mb-6 flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive animate-in fade-in-50">
+          <AlertCircle className="size-4 shrink-0 mt-0.5 text-destructive" />
+          <div className="flex-1 font-medium leading-relaxed">
+            {authErrorBanner}
+          </div>
         </div>
       )}
 
-      {/* Google Login */}
       <Button
         type="button"
         variant="outline"
@@ -244,29 +232,25 @@ export function SignInForm() {
         ) : (
           <GoogleIcon />
         )}
-        <span>Sign in with Google</span>
+        <span>Continue with Google</span>
       </Button>
 
-      {/* Divider */}
       <div className="relative my-6 text-center text-xs text-muted-foreground">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border/70" />
         </div>
         <span className="relative bg-card px-3 uppercase tracking-wider">
-          Or continue with email
+          Or sign in with email
         </span>
       </div>
 
-      {/* Sign In Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email Field */}
         <div className="space-y-1.5">
           <Label htmlFor="email">Email Address</Label>
           <Input
             id="email"
             type="email"
             placeholder="you@example.com"
-            autoComplete="email"
             className="h-10"
             {...register("email")}
           />
@@ -275,26 +259,29 @@ export function SignInForm() {
           )}
         </div>
 
-        {/* Password Field */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
+            <Link
+              href="/forgot-password"
+              className="text-xs text-primary hover:underline underline-offset-4"
+            >
+              Forgot password?
+            </Link>
           </div>
-
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              autoComplete="current-password"
+              placeholder="••••••••"
               className="h-10 pr-10"
               {...register("password")}
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => setShowPassword((prev) => !prev)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              tabIndex={-1}
             >
               {showPassword ? (
                 <EyeOff className="size-4" />
@@ -308,7 +295,6 @@ export function SignInForm() {
           )}
         </div>
 
-        {/* Submit Button */}
         <Button
           type="submit"
           disabled={isSubmitting || isGoogleLoading}
@@ -328,14 +314,13 @@ export function SignInForm() {
         </Button>
       </form>
 
-      {/* Switch to Sign Up */}
       <div className="mt-6 text-center text-sm text-muted-foreground">
-        Don&apos;t have an account yet?{" "}
+        Don&apos;t have an account?{" "}
         <Link
           href={`/signup${callbackUrl ? `?redirect=${encodeURIComponent(callbackUrl)}` : ""}`}
           className="font-medium text-primary hover:underline underline-offset-4"
         >
-          Sign Up
+          Create an Account
         </Link>
       </div>
     </div>

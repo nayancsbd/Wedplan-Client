@@ -34,12 +34,10 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
   const [isBookingOpen, setIsBookingOpen] = React.useState(false)
   const [isFavorited, setIsFavorited] = React.useState(false)
 
-  // Determine user role flags
   const isCustomer = role === "customer"
   const isVendor = role === "vendor"
   const isAdmin = role === "admin"
 
-  // Check if current vendor owns this service listing
   const isOwner =
     isVendor &&
     Boolean(
@@ -49,7 +47,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
         user.email.toLowerCase() === service.vendorEmail.toLowerCase())
     )
 
-  // Vendor initials for avatar fallback
   const vendorInitials = (service.vendorName || "Wedding Vendor")
     .split(" ")
     .map((w) => w[0])
@@ -73,7 +70,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-      {/* Breadcrumb Navigation */}
       <nav
         aria-label="Breadcrumb"
         className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground overflow-x-auto whitespace-nowrap pb-1"
@@ -102,14 +98,10 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
         </span>
       </nav>
 
-      {/* Main Service Layout Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-        {/* Left Column (8 cols): Media Gallery & Full Service Details */}
         <div className="lg:col-span-8 space-y-8">
-          {/* Image Gallery with Thumbnails */}
           <ServiceImageGallery images={service.images} title={service.title} />
 
-          {/* Core Info & Title Header */}
           <div className="space-y-4 border-b border-border/70 pb-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -129,7 +121,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
                 )}
               </div>
 
-              {/* Action buttons (Share / Save) */}
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -160,7 +151,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
               {service.title}
             </h1>
 
-            {/* Location & Rating meta bar */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pt-1">
               {service.location && (
                 <div className="flex items-center gap-1.5">
@@ -179,7 +169,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
             </div>
           </div>
 
-          {/* Description Section */}
           <div className="space-y-4">
             <h2 className="font-serif text-2xl font-semibold text-foreground">
               About This Service
@@ -190,7 +179,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
             </div>
           </div>
 
-          {/* Inclusions / Highlights */}
           {service.inclusions && service.inclusions.length > 0 && (
             <div className="space-y-4 rounded-2xl border border-border/80 bg-card p-6 shadow-xs">
               <h2 className="font-serif text-xl font-semibold text-foreground">
@@ -209,7 +197,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
             </div>
           )}
 
-          {/* Vendor Information Card */}
           <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-xs space-y-4">
             <h2 className="font-serif text-xl font-semibold text-foreground">
               Vendor Information
@@ -256,10 +243,8 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
           </div>
         </div>
 
-        {/* Right Column (4 cols): Sticky Booking & Pricing Card */}
         <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
           <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm space-y-6">
-            {/* Price Header */}
             <div className="border-b border-border/70 pb-4 space-y-1">
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Investment
@@ -277,9 +262,7 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
               )}
             </div>
 
-            {/* Dynamic Role-Based Booking Section */}
             <div className="space-y-4">
-              {/* Scenario 1: Not Logged In */}
               {!isAuthenticated && (
                 <div className="space-y-3 rounded-xl border border-border/80 bg-muted/40 p-4 text-center">
                   <Info className="size-5 text-primary mx-auto" />
@@ -302,7 +285,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
                 </div>
               )}
 
-              {/* Scenario 2: Vendor owns this service -> 'You cannot book your own service' */}
               {isAuthenticated && isOwner && (
                 <div className="space-y-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-amber-900 dark:text-amber-200">
                   <div className="flex items-start gap-2.5">
@@ -324,7 +306,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
                 </div>
               )}
 
-              {/* Scenario 3: Vendor does NOT own this service -> Info message */}
               {isAuthenticated && isVendor && !isOwner && (
                 <div className="space-y-3 rounded-xl border border-border/80 bg-muted/40 p-4">
                   <div className="flex items-start gap-2.5">
@@ -346,7 +327,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
                 </div>
               )}
 
-              {/* Scenario 4: Admin -> Info message */}
               {isAuthenticated && isAdmin && (
                 <div className="space-y-3 rounded-xl border border-border/80 bg-muted/40 p-4">
                   <div className="flex items-start gap-2.5">
@@ -368,7 +348,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
                 </div>
               )}
 
-              {/* Scenario 5: Customer -> Show Booking Action & Form Trigger */}
               {isAuthenticated && isCustomer && (
                 <div className="space-y-4">
                   <div className="space-y-1.5 text-xs text-muted-foreground">
@@ -395,7 +374,6 @@ export function ServiceDetailView({ service }: ServiceDetailViewProps) {
                     <span>Book This Service</span>
                   </Button>
 
-                  {/* Booking Modal Dialog */}
                   <BookingDialog
                     service={service}
                     open={isBookingOpen}

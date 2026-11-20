@@ -8,7 +8,17 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { toast } from "sonner"
-import { ArrowLeft, Sparkles, Upload, X, Loader2, Crown, Image as ImageIcon } from "lucide-react"
+import {
+  ArrowLeft,
+  Sparkles,
+  Upload,
+  X,
+  Loader2,
+  Crown,
+  Image as ImageIcon,
+  AlertCircle,
+  RotateCcw,
+} from "lucide-react"
 
 import { SectionHeading } from "@/components/shared/SectionHeading"
 import { Button } from "@/components/ui/button"
@@ -40,6 +50,8 @@ export default function AddServicePage() {
   const router = useRouter()
   const [images, setImages] = React.useState<string[]>([])
   const [isUploading, setIsUploading] = React.useState(false)
+  const [uploadError, setUploadError] = React.useState<string | null>(null)
+  const [failedFiles, setFailedFiles] = React.useState<File[]>([])
   const [planLimitError, setPlanLimitError] = React.useState<string | null>(null)
   const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
@@ -58,65 +70,85 @@ export default function AddServicePage() {
     },
   })
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-
+  const uploadBatch = async (filesToUpload: File[]) => {
     const remainingSlots = 5 - images.length
     if (remainingSlots <= 0) {
       toast.error("Maximum 5 images allowed per service")
       return
     }
 
-    const filesToUpload = Array.from(files).slice(0, remainingSlots)
+    const files = filesToUpload.slice(0, remainingSlots)
     setIsUploading(true)
+    setUploadError(null)
 
-    try {
-      const uploadedUrls: string[] = []
+    const newlyUploaded: string[] = []
+    const failed: File[] = []
 
-      for (const file of filesToUpload) {
-        const formData = new FormData()
-        formData.append("file", file)
-        formData.append("image", file)
+    for (const file of files) {
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("image", file)
 
-        let uploadUrl = ""
+      let uploadUrl = ""
 
-        try {
-          const res = await fetch("/api/upload", {
-            method: "POST",
-            body: formData,
-          })
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        })
 
-          if (res.ok) {
-            const json: unknown = await res.json()
-            const record = json as Record<string, unknown>
-            uploadUrl =
-              (typeof record.url === "string" ? record.url : "") ||
-              (typeof record.imageUrl === "string" ? record.imageUrl : "") ||
-              (typeof (record.data as Record<string, unknown>)?.url === "string"
-                ? (record.data as Record<string, unknown>).url as string
-                : "")
-          }
-        } catch {
-          uploadUrl = ""
+        if (res.ok) {
+          const json: unknown = await res.json()
+          const record = json as Record<string, unknown>
+          uploadUrl =
+            (typeof record.url === "string" ? record.url : "") ||
+            (typeof record.imageUrl === "string" ? record.imageUrl : "") ||
+            (typeof (record.data as Record<string, unknown>)?.url === "string"
+              ? (record.data as Record<string, unknown>).url as string
+              : "")
+        } else {
+          failed.push(file)
         }
-
-        if (!uploadUrl) {
-          uploadUrl = URL.createObjectURL(file)
-        }
-
-        uploadedUrls.push(uploadUrl)
+      } catch {
+        failed.push(file)
       }
 
-      setImages((prev) => [...prev, ...uploadedUrls].slice(0, 5))
-      toast.success(`${uploadedUrls.length} image(s) uploaded successfully`)
-    } catch {
-      toast.error("Failed to upload some images")
-    } finally {
-      setIsUploading(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+      if (uploadUrl) {
+        newlyUploaded.push(uploadUrl)
       }
+    }
+
+    if (newlyUploaded.length > 0) {
+      setImages((prev) => [...prev, ...newlyUploaded].slice(0, 5))
+      toast.success(`${newlyUploaded.length} image(s) uploaded successfully`)
+    }
+
+    if (failed.length > 0) {
+      setFailedFiles(failed)
+      setUploadError(`${failed.length} image(s) failed to upload. Click retry to try uploading again.`)
+      toast.error(`Failed to upload ${failed.length} image(s). Check your connection and retry.`)
+    } else {
+      setFailedFiles([])
+      setUploadError(null)
+    }
+
+    setIsUploading(false)
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    await uploadBatch(Array.from(files))
+  }
+
+  const handleRetryUpload = async () => {
+    if (failedFiles.length > 0) {
+      await uploadBatch(failedFiles)
+    } else {
+      fileInputRef.current?.click()
     }
   }
 
@@ -328,6 +360,40 @@ export default function AddServicePage() {
                 </Button>
               )}
             </div>
+
+            {uploadError && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-destructive">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="size-4 shrink-0" />
+                  <span>{uploadError}</span>
+                </div>
+                <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isUploading}
+                    onClick={handleRetryUpload}
+                    className="h-7 text-xs border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer gap-1.5"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      <RotateCcw className="size-3" />
+                    )}
+                    <span>Retry Upload</span>
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setUploadError(null)}
+                    className="p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                    title="Dismiss"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             <input
               ref={fileInputRef}

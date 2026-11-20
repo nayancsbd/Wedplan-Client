@@ -97,7 +97,6 @@ export function ServiceDetailPageClient({ id }: ServiceDetailPageClientProps) {
     setReloadTrigger((prev) => prev + 1)
   }
 
-  // Missing or Invalid ID upfront
   if (isInvalidId) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 space-y-6">
@@ -123,11 +122,9 @@ export function ServiceDetailPageClient({ id }: ServiceDetailPageClientProps) {
     )
   }
 
-  // Loading Skeleton State
   if (isLoading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-pulse">
-        {/* Breadcrumb Skeleton */}
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-12" />
           <Skeleton className="h-4 w-4" />
@@ -136,7 +133,6 @@ export function ServiceDetailPageClient({ id }: ServiceDetailPageClientProps) {
           <Skeleton className="h-4 w-32" />
         </div>
 
-        {/* Content Skeleton Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           <div className="lg:col-span-8 space-y-6">
             <Skeleton className="aspect-16/10 w-full rounded-2xl" />
@@ -172,7 +168,6 @@ export function ServiceDetailPageClient({ id }: ServiceDetailPageClientProps) {
     )
   }
 
-  // Friendly Error / Missing / 404 State
   if (isError || !service) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 space-y-6">
@@ -206,6 +201,5 @@ export function ServiceDetailPageClient({ id }: ServiceDetailPageClientProps) {
     )
   }
 
-  // Successfully Loaded Service Details
   return <ServiceDetailView service={service} />
 }

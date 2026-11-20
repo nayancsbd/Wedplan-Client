@@ -19,6 +19,8 @@ import {
   Sparkles,
   Store,
   User as UserIcon,
+  AlertCircle,
+  RotateCcw,
 } from "lucide-react"
 
 import { authClient } from "@/lib/auth-client"
@@ -96,7 +98,10 @@ export function SignUpForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = React.useState(false)
   const [isUploadingImage, setIsUploadingImage] = React.useState(false)
+  const [uploadError, setUploadError] = React.useState<string | null>(null)
   const [imagePreview, setImagePreview] = React.useState<string | null>(null)
+  const lastSelectedFileRef = React.useRef<File | null>(null)
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null)
 
   const {
     register,
@@ -119,12 +124,10 @@ export function SignUpForm() {
   const selectedRole = useWatch({ control, name: "role" })
   const passwordValue = useWatch({ control, name: "password" }) || ""
 
-  // Live password validation hints
   const hasMinLength = passwordValue.length >= 6
   const hasUppercase = /[A-Z]/.test(passwordValue)
   const hasLowercase = /[a-z]/.test(passwordValue)
 
-  // Redirect already-logged-in users away from signup
   React.useEffect(() => {
     if (!isAuthChecking && isAuthenticated && user) {
       const target =
@@ -138,13 +141,7 @@ export function SignUpForm() {
     }
   }, [isAuthChecking, isAuthenticated, user, callbackUrl, router])
 
-  // Profile image upload handler via POST /api/upload/public
-  const handleImageFileChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
+  const uploadFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
       toast.error("Please select a valid image file (PNG, JPG, WEBP).")
       return
@@ -155,9 +152,11 @@ export function SignUpForm() {
       return
     }
 
+    lastSelectedFileRef.current = file
     const localPreview = URL.createObjectURL(file)
     setImagePreview(localPreview)
     setIsUploadingImage(true)
+    setUploadError(null)
 
     try {
       const formData = new FormData()
@@ -183,28 +182,49 @@ export function SignUpForm() {
 
         if (uploadedUrl) {
           setValue("image", uploadedUrl)
+          setUploadError(null)
           toast.success("Profile photo uploaded successfully")
         } else {
           setValue("image", localPreview)
+          setUploadError("Image uploaded locally. Permanent storage was unavailable.")
         }
       } else {
         setValue("image", localPreview)
-        toast.info("Using local preview for profile photo")
+        setUploadError("Image upload to server failed. You can retry.")
+        toast.error("Image upload failed. Click retry to try again.")
       }
     } catch {
       setValue("image", localPreview)
-      toast.info("Photo preview attached")
+      setUploadError("Network connection issue while uploading image.")
+      toast.error("Failed to connect to image upload service.")
     } finally {
       setIsUploadingImage(false)
     }
   }
 
+  const handleImageFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    await uploadFile(file)
+  }
+
+  const handleRetryUpload = () => {
+    if (lastSelectedFileRef.current) {
+      uploadFile(lastSelectedFileRef.current)
+    } else {
+      fileInputRef.current?.click()
+    }
+  }
+
   const handleRemoveImage = () => {
     setImagePreview(null)
+    setUploadError(null)
+    lastSelectedFileRef.current = null
     setValue("image", "")
   }
 
-  // Email / Password Form Submission
   const onSubmit = async (values: SignUpFormValues) => {
     setIsSubmitting(true)
     try {
@@ -246,7 +266,6 @@ export function SignUpForm() {
     }
   }
 
-  // Google Social Sign Up
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true)
     try {
@@ -272,7 +291,6 @@ export function SignUpForm() {
 
   return (
     <div className="w-full max-w-lg rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-sm">
-      {/* Header */}
       <div className="text-center space-y-2 pb-6">
         <div className="mx-auto flex size-11 items-center justify-center rounded-full bg-primary/10 text-primary mb-2">
           <Heart className="size-5 fill-primary text-primary" />
@@ -285,7 +303,6 @@ export function SignUpForm() {
         </p>
       </div>
 
-      {/* Google Sign Up */}
       <Button
         type="button"
         variant="outline"
@@ -301,7 +318,6 @@ export function SignUpForm() {
         <span>Sign up with Google</span>
       </Button>
 
-      {/* Divider */}
       <div className="relative my-6 text-center text-xs text-muted-foreground">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border/70" />
@@ -311,15 +327,12 @@ export function SignUpForm() {
         </span>
       </div>
 
-      {/* Sign Up Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Account Role Selector */}
         <div className="space-y-2">
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             I am joining as a
           </Label>
           <div className="grid grid-cols-2 gap-3">
-            {/* Customer Role Card */}
             <button
               type="button"
               onClick={() => setValue("role", "customer")}
@@ -337,7 +350,6 @@ export function SignUpForm() {
               </span>
             </button>
 
-            {/* Vendor Role Card */}
             <button
               type="button"
               onClick={() => setValue("role", "vendor")}
@@ -357,7 +369,6 @@ export function SignUpForm() {
           </div>
         </div>
 
-        {/* Business Name Field (Appears only when Vendor role is chosen) */}
         {selectedRole === "vendor" && (
           <div className="space-y-1.5 animate-in fade-in-50 duration-200">
             <Label htmlFor="businessName">Business / Studio Name *</Label>
@@ -373,7 +384,6 @@ export function SignUpForm() {
           </div>
         )}
 
-        {/* Full Name */}
         <div className="space-y-1.5">
           <Label htmlFor="name">Full Name *</Label>
           <Input
@@ -387,7 +397,6 @@ export function SignUpForm() {
           )}
         </div>
 
-        {/* Email */}
         <div className="space-y-1.5">
           <Label htmlFor="email">Email Address *</Label>
           <Input
@@ -402,22 +411,21 @@ export function SignUpForm() {
           )}
         </div>
 
-        {/* Password */}
         <div className="space-y-1.5">
           <Label htmlFor="password">Password *</Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Create a strong password"
+              placeholder="At least 6 characters with mixed case"
               className="h-10 pr-10"
               {...register("password")}
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() => setShowPassword((prev) => !prev)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              tabIndex={-1}
             >
               {showPassword ? (
                 <EyeOff className="size-4" />
@@ -430,56 +438,54 @@ export function SignUpForm() {
             <p className="text-xs text-destructive">{errors.password.message}</p>
           )}
 
-          {/* Live Password Rules Hint */}
-          <div className="rounded-lg bg-secondary/50 p-2.5 text-xs space-y-1 mt-1.5">
-            <p className="font-medium text-foreground/80 text-[11px] uppercase tracking-wide">
-              Password requirements:
-            </p>
-            <div className="grid grid-cols-1 gap-1 text-muted-foreground">
-              <div
-                className={cn(
-                  "flex items-center gap-1.5 transition-colors",
-                  hasMinLength ? "text-emerald-600 dark:text-emerald-400 font-medium" : ""
-                )}
-              >
-                {hasMinLength ? (
-                  <CheckCircle2 className="size-3.5 shrink-0" />
-                ) : (
-                  <Circle className="size-3.5 shrink-0" />
-                )}
-                <span>At least 6 characters</span>
-              </div>
-              <div
-                className={cn(
-                  "flex items-center gap-1.5 transition-colors",
-                  hasUppercase ? "text-emerald-600 dark:text-emerald-400 font-medium" : ""
-                )}
-              >
-                {hasUppercase ? (
-                  <CheckCircle2 className="size-3.5 shrink-0" />
-                ) : (
-                  <Circle className="size-3.5 shrink-0" />
-                )}
-                <span>At least one uppercase letter (A-Z)</span>
-              </div>
-              <div
-                className={cn(
-                  "flex items-center gap-1.5 transition-colors",
-                  hasLowercase ? "text-emerald-600 dark:text-emerald-400 font-medium" : ""
-                )}
-              >
-                {hasLowercase ? (
-                  <CheckCircle2 className="size-3.5 shrink-0" />
-                ) : (
-                  <Circle className="size-3.5 shrink-0" />
-                )}
-                <span>At least one lowercase letter (a-z)</span>
+          {passwordValue && (
+            <div className="mt-2 space-y-1 rounded-lg border border-border/60 bg-muted/30 p-2.5 text-xs">
+              <p className="font-medium text-foreground">Password requirements:</p>
+              <div className="grid grid-cols-1 gap-1 pt-1">
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5",
+                    hasMinLength ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                  )}
+                >
+                  {hasMinLength ? (
+                    <CheckCircle2 className="size-3.5 shrink-0" />
+                  ) : (
+                    <Circle className="size-3.5 shrink-0" />
+                  )}
+                  <span>At least 6 characters</span>
+                </div>
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5",
+                    hasUppercase ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                  )}
+                >
+                  {hasUppercase ? (
+                    <CheckCircle2 className="size-3.5 shrink-0" />
+                  ) : (
+                    <Circle className="size-3.5 shrink-0" />
+                  )}
+                  <span>At least one uppercase letter (A-Z)</span>
+                </div>
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5",
+                    hasLowercase ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
+                  )}
+                >
+                  {hasLowercase ? (
+                    <CheckCircle2 className="size-3.5 shrink-0" />
+                  ) : (
+                    <Circle className="size-3.5 shrink-0" />
+                  )}
+                  <span>At least one lowercase letter (a-z)</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Optional Profile Image Upload (Preview + Loader) */}
         <div className="space-y-1.5 pt-1">
           <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Profile Image (Optional)
@@ -515,6 +521,7 @@ export function SignUpForm() {
                   <Upload className="size-3.5 text-primary" />
                   <span>{imagePreview ? "Change Photo" : "Upload Photo"}</span>
                   <input
+                    ref={fileInputRef}
                     id="profile-image-upload"
                     type="file"
                     accept="image/*"
@@ -542,9 +549,41 @@ export function SignUpForm() {
               </p>
             </div>
           </div>
+
+          {uploadError && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 flex items-center justify-between gap-3 text-xs text-destructive mt-2">
+              <div className="flex items-center gap-1.5">
+                <AlertCircle className="size-3.5 shrink-0" />
+                <span>{uploadError}</span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isUploadingImage}
+                  onClick={handleRetryUpload}
+                  className="h-6 text-[11px] px-2 border-destructive/40 text-destructive hover:bg-destructive/10 cursor-pointer gap-1"
+                >
+                  {isUploadingImage ? (
+                    <Loader2 className="size-3 animate-spin" />
+                  ) : (
+                    <RotateCcw className="size-3" />
+                  )}
+                  <span>Retry</span>
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setUploadError(null)}
+                  className="text-muted-foreground hover:text-foreground cursor-pointer"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Submit Button */}
         <Button
           type="submit"
           disabled={isSubmitting || isGoogleLoading || isUploadingImage}
@@ -564,7 +603,6 @@ export function SignUpForm() {
         </Button>
       </form>
 
-      {/* Switch to Sign In */}
       <div className="mt-6 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link

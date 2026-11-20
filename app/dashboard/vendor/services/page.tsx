@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   Loader2,
   Save,
+  AlertTriangle,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -59,6 +60,10 @@ const CATEGORIES = [
 export default function VendorServicesPage() {
   const [services, setServices] = React.useState<VendorServiceRecord[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [hasError, setHasError] = React.useState(false)
+  const [refreshTrigger, setRefreshTrigger] = React.useState(0)
+
+  const refetch = React.useCallback(() => setRefreshTrigger((c) => c + 1), [])
 
   const [editingService, setEditingService] = React.useState<VendorServiceRecord | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false)
@@ -71,6 +76,7 @@ export default function VendorServicesPage() {
     let isMounted = true
 
     const loadServices = async () => {
+      setIsLoading(true)
       try {
         const res = await fetch("/api/vendor/services", {
           headers: { Accept: "application/json" },
@@ -104,12 +110,15 @@ export default function VendorServicesPage() {
           })
 
           setServices(normalizedList)
+          setHasError(false)
         } else {
           setServices([])
+          setHasError(true)
         }
       } catch {
         if (isMounted) {
           setServices([])
+          setHasError(true)
         }
       } finally {
         if (isMounted) {
@@ -123,7 +132,7 @@ export default function VendorServicesPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [refreshTrigger])
 
   const handleToggleAvailability = async (service: VendorServiceRecord) => {
     const updatedActive = !(service.isActive !== false)
@@ -418,6 +427,25 @@ export default function VendorServicesPage() {
           </Button>
         </Link>
       </div>
+
+      {hasError && (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-5 flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="size-5 text-destructive shrink-0" />
+            <p className="text-foreground">
+              Unable to load your wedding services. Please check your network connection or try again.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            className="h-8 text-xs cursor-pointer"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       <DataTable
         columns={columns}

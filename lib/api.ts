@@ -26,10 +26,7 @@ interface TokenCache {
   expiresAt: number
 }
 
-// In-memory token cache (never stored in localStorage)
 let memoryTokenCache: TokenCache | null = null
-
-// Cache briefly for 60 seconds
 const CACHE_TTL_MS = 60 * 1000
 
 export function clearTokenCache(): void {
@@ -70,7 +67,6 @@ export async function getAuthToken(): Promise<string | null> {
       return token
     }
   } catch {
-    // Session may not exist or request failed
   }
 
   memoryTokenCache = null
@@ -90,7 +86,6 @@ export async function apiFetch<T = unknown>(
 
   const reqHeaders = new Headers(headers)
 
-  // Attach JWT Bearer Authorization header if available
   if (!skipAuth && !reqHeaders.has("Authorization")) {
     const token = await getAuthToken()
     if (token) {
@@ -98,7 +93,6 @@ export async function apiFetch<T = unknown>(
     }
   }
 
-  // Format request body (JSON if standard object and not FormData/Blob)
   let formattedBody: BodyInit | undefined = undefined
   if (body !== undefined && body !== null) {
     if (
@@ -120,7 +114,6 @@ export async function apiFetch<T = unknown>(
     reqHeaders.set("Accept", "application/json")
   }
 
-  // Format target URL (defaults to /api/:path if relative)
   let url = endpoint
   if (
     !url.startsWith("/") &&
@@ -136,7 +129,6 @@ export async function apiFetch<T = unknown>(
     body: formattedBody,
   })
 
-  // Handle 401 Unauthorized -> clear memory token cache and redirect to /signin
   if (response.status === 401) {
     clearTokenCache()
 
@@ -144,7 +136,6 @@ export async function apiFetch<T = unknown>(
     try {
       errorData = (await response.json()) as ApiErrorPayload
     } catch {
-      // response was not JSON
     }
 
     const message =
@@ -162,21 +153,41 @@ export async function apiFetch<T = unknown>(
         currentPath && currentPath !== "/"
           ? `?redirect=${encodeURIComponent(currentPath)}`
           : ""
-      // Hard navigation on 401 resets application and in-memory state
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.href = `${window.location.origin}/signin${redirect}`
+      window.location.replace(`${window.location.origin}/signin${redirect}`)
     }
 
     throw new ApiError(401, message, errors)
   }
 
-  // Handle other HTTP errors (4xx, 5xx)
+  if (response.status === 403) {
+    let errorData: ApiErrorPayload | null = null
+    try {
+      errorData = (await response.json()) as ApiErrorPayload
+    } catch {
+    }
+
+    const message =
+      errorData?.message ||
+      errorData?.error ||
+      "Access Denied: You do not have permission to view this resource or perform this action."
+    const errors = errorData?.errors
+
+    if (
+      typeof window !== "undefined" &&
+      (message.toLowerCase().includes("blocked") || message.toLowerCase().includes("suspended"))
+    ) {
+      clearTokenCache()
+      window.location.replace(`${window.location.origin}/blocked`)
+    }
+
+    throw new ApiError(403, message, errors)
+  }
+
   if (!response.ok) {
     let errorData: ApiErrorPayload | null = null
     try {
       errorData = (await response.json()) as ApiErrorPayload
     } catch {
-      // response was not JSON
     }
 
     const message =
@@ -189,12 +200,10 @@ export async function apiFetch<T = unknown>(
     throw new ApiError(response.status, message, errors)
   }
 
-  // Handle 204 No Content
   if (response.status === 204) {
     return null as T
   }
 
-  // Parse JSON response
   const contentType = response.headers.get("content-type") || ""
   if (contentType.includes("application/json")) {
     return (await response.json()) as T

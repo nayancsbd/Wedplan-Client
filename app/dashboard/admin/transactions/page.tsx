@@ -7,6 +7,7 @@ import {
   Receipt,
   Store,
   Calendar,
+  AlertTriangle,
 } from "lucide-react"
 
 import { SectionHeading } from "@/components/shared/SectionHeading"
@@ -31,8 +32,14 @@ type StatusFilter = "all" | "paid" | "pending" | "failed"
 export default function AdminTransactionsPage() {
   const [transactions, setTransactions] = React.useState<AdminTransactionItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [hasError, setHasError] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all")
+  const [refreshTrigger, setRefreshTrigger] = React.useState(0)
+
+  const refetch = React.useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1)
+  }, [])
 
   React.useEffect(() => {
     let isMounted = true
@@ -108,10 +115,12 @@ export default function AdminTransactionsPage() {
 
         if (isMounted) {
           setTransactions(rawList)
+          setHasError(false)
         }
       } catch {
         if (isMounted) {
           setTransactions([])
+          setHasError(true)
         }
       } finally {
         if (isMounted) {
@@ -125,7 +134,7 @@ export default function AdminTransactionsPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [refreshTrigger])
 
   const filteredTransactions = React.useMemo(() => {
     return transactions.filter((t) => {
@@ -234,6 +243,25 @@ export default function AdminTransactionsPage() {
           />
         </div>
       </div>
+
+      {hasError && (
+        <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-5 flex items-center justify-between gap-4 text-xs">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="size-5 text-destructive shrink-0" />
+            <p className="text-foreground">
+              Unable to load marketplace transactions. Please check your network or try again.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refetch}
+            className="h-8 text-xs cursor-pointer"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="space-y-3">
