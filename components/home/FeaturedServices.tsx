@@ -7,132 +7,24 @@ import { ArrowRight, RefreshCw } from "lucide-react"
 
 import { SectionHeading } from "@/components/shared/SectionHeading"
 import { ServiceCard } from "@/components/shared/ServiceCard"
+import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { ServiceItem, normalizeService } from "@/lib/service-utils"
 
-export interface ServiceItem {
-  id: string
-  title: string
-  category: string
-  vendorName?: string
-  location?: string
-  startingPrice?: number | string
-  rating?: number
-  reviewCount?: number
-  imageUrl?: string
-  featured?: boolean
-}
-
-// High-quality fallback featured services for seamless presentation
-const FALLBACK_FEATURED_SERVICES: ServiceItem[] = [
-  {
-    id: "srv-1",
-    title: "Golden Hour Fine Art Photography",
-    category: "Photography & Videography",
-    vendorName: "Lumière Wedding Studios",
-    location: "Napa Valley, CA",
-    startingPrice: 3200,
-    rating: 4.9,
-    reviewCount: 48,
-    featured: true,
-  },
-  {
-    id: "srv-2",
-    title: "The Glasshouse Botanical Estate",
-    category: "Wedding Venues",
-    vendorName: "Estate of Cascades",
-    location: "Carmel-by-the-Sea, CA",
-    startingPrice: 6500,
-    rating: 5.0,
-    reviewCount: 64,
-    featured: true,
-  },
-  {
-    id: "srv-3",
-    title: "Blush Garden Florals & Luxe Arches",
-    category: "Decoration & Florist",
-    vendorName: "Petals & Prose Floristry",
-    location: "San Francisco, CA",
-    startingPrice: 1850,
-    rating: 4.8,
-    reviewCount: 39,
-    featured: true,
-  },
-  {
-    id: "srv-4",
-    title: "Farm-to-Table Artisan Multi-Course Feast",
-    category: "Catering Services",
-    vendorName: "Heirloom & Thyme Culinary",
-    location: "Sonoma, CA",
-    startingPrice: 85,
-    rating: 5.0,
-    reviewCount: 52,
-    featured: true,
-  },
-  {
-    id: "srv-5",
-    title: "Bridal Glow Glamour & Hair Styling",
-    category: "Makeup & Styling",
-    vendorName: "Aura Bridal Beauty",
-    location: "Oakland, CA",
-    startingPrice: 650,
-    rating: 4.9,
-    reviewCount: 31,
-    featured: true,
-  },
-  {
-    id: "srv-6",
-    title: "Couture Silk & Hand-Beaded Gowns",
-    category: "Wedding Fashion",
-    vendorName: "Maison Blanche Bridal",
-    location: "San Jose, CA",
-    startingPrice: 2400,
-    rating: 4.8,
-    reviewCount: 27,
-    featured: true,
-  },
-]
+export type { ServiceItem }
 
 export function FeaturedServices() {
   const shouldReduceMotion = useReducedMotion()
   const [services, setServices] = React.useState<ServiceItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [isError, setIsError] = React.useState(false)
-
-  const fetchFeatured = React.useCallback(async () => {
-    setIsLoading(true)
-    setIsError(false)
-
-    try {
-      const res = await fetch("/api/services/featured", {
-        headers: { Accept: "application/json" },
-        cache: "no-store",
-      })
-
-      if (res.ok) {
-        const json = await res.json()
-        const fetchedItems: ServiceItem[] =
-          json?.data || json?.services || (Array.isArray(json) ? json : [])
-
-        if (Array.isArray(fetchedItems) && fetchedItems.length > 0) {
-          setServices(fetchedItems)
-        } else {
-          setServices(FALLBACK_FEATURED_SERVICES)
-        }
-      } else {
-        setServices(FALLBACK_FEATURED_SERVICES)
-      }
-    } catch {
-      setServices(FALLBACK_FEATURED_SERVICES)
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+  const [reloadTrigger, setReloadTrigger] = React.useState(0)
 
   React.useEffect(() => {
     let isMounted = true
 
-    const load = async () => {
+    const loadFeatured = async () => {
       try {
         const res = await fetch("/api/services/featured", {
           headers: { Accept: "application/json" },
@@ -142,21 +34,37 @@ export function FeaturedServices() {
         if (!isMounted) return
 
         if (res.ok) {
-          const json = await res.json()
-          const fetchedItems: ServiceItem[] =
-            json?.data || json?.services || (Array.isArray(json) ? json : [])
+          const json: unknown = await res.json()
+          let rawList: unknown[] = []
 
-          if (Array.isArray(fetchedItems) && fetchedItems.length > 0) {
-            setServices(fetchedItems)
-          } else {
-            setServices(FALLBACK_FEATURED_SERVICES)
+          if (Array.isArray(json)) {
+            rawList = json
+          } else if (json && typeof json === "object") {
+            const jsonObj = json as Record<string, unknown>
+            if (Array.isArray(jsonObj.data)) {
+              rawList = jsonObj.data
+            } else if (Array.isArray(jsonObj.services)) {
+              rawList = jsonObj.services
+            } else if (
+              jsonObj.data &&
+              typeof jsonObj.data === "object" &&
+              Array.isArray((jsonObj.data as Record<string, unknown>).services)
+            ) {
+              rawList = (jsonObj.data as Record<string, unknown>).services as unknown[]
+            }
           }
+
+          const items = rawList.map(normalizeService)
+          setServices(items)
+          setIsError(false)
         } else {
-          setServices(FALLBACK_FEATURED_SERVICES)
+          setIsError(true)
+          setServices([])
         }
       } catch {
         if (isMounted) {
-          setServices(FALLBACK_FEATURED_SERVICES)
+          setIsError(true)
+          setServices([])
         }
       } finally {
         if (isMounted) {
@@ -165,12 +73,18 @@ export function FeaturedServices() {
       }
     }
 
-    load()
+    loadFeatured()
 
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [reloadTrigger])
+
+  const handleRetry = () => {
+    setIsLoading(true)
+    setIsError(false)
+    setReloadTrigger((prev) => prev + 1)
+  }
 
   return (
     <section className="py-16 sm:py-24 bg-card/40 border-y border-border/60">
@@ -189,7 +103,7 @@ export function FeaturedServices() {
           />
         </motion.div>
 
-        {/* Content Grid */}
+        {/* Content Grid / States */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -210,16 +124,26 @@ export function FeaturedServices() {
               </div>
             ))}
           </div>
-        ) : isError && services.length === 0 ? (
+        ) : isError ? (
           <div className="flex flex-col items-center justify-center p-8 text-center space-y-4 rounded-2xl border border-dashed border-border bg-card">
             <p className="text-sm text-muted-foreground">
               Unable to load featured services right now.
             </p>
-            <Button variant="outline" size="sm" onClick={fetchFeatured}>
+            <Button variant="outline" size="sm" onClick={handleRetry} className="cursor-pointer">
               <RefreshCw className="size-4 mr-2" />
               Try Again
             </Button>
           </div>
+        ) : services.length === 0 ? (
+          <EmptyState
+            title="No Featured Services Found"
+            description="We couldn't find any featured services at this time. Explore our complete collection of wedding vendors and venues."
+            action={{
+              label: "Browse All Services",
+              href: "/services",
+            }}
+            className="my-8"
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((item, index) => (
@@ -257,7 +181,7 @@ export function FeaturedServices() {
             <Button
               variant="outline"
               size="lg"
-              className="border-primary/30 text-foreground hover:bg-primary/10 hover:text-primary transition-all font-medium"
+              className="border-primary/30 text-foreground hover:bg-primary/10 hover:text-primary transition-all font-medium cursor-pointer"
             >
               <span>Browse All Wedding Services</span>
               <ArrowRight className="size-4 ml-2" />
