@@ -79,15 +79,10 @@ export function Footer() {
 
   return (
     <footer className="border-t border-border/80 bg-card text-foreground">
-      {/* Main Footer Content */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-5">
-          {/* Brand & Description Column */}
           <div className="space-y-4 lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex size-9 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Heart className="size-5 fill-primary text-primary stroke-[1.8]" />
-              </div>
+            <Link href="/" className="inline-block">
               <span className="font-serif text-2xl font-bold tracking-tight text-foreground">
                 Wed<span className="text-primary font-serif">Plan</span>
               </span>
@@ -130,7 +125,6 @@ export function Footer() {
             </div>
           </div>
 
-          {/* Couples & Services Links */}
           <div className="space-y-3">
             <p className="font-serif text-sm font-semibold tracking-wide text-foreground uppercase">
               For Couples
@@ -149,7 +143,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Vendors Links */}
           <div className="space-y-3">
             <p className="font-serif text-sm font-semibold tracking-wide text-foreground uppercase">
               For Vendors
@@ -168,7 +161,6 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Contact Details Column */}
           <div className="space-y-3">
             <p className="font-serif text-sm font-semibold tracking-wide text-foreground uppercase">
               Get in Touch
@@ -204,7 +196,6 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright & Legal */}
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border/60 pt-6 text-xs text-muted-foreground sm:flex-row">
           <p className="flex items-center gap-1.5">
             &copy; {currentYear} WedPlan Inc. Crafted with{" "}

@@ -43,7 +43,6 @@ export interface NavItem {
   badge?: string
 }
 
-// Sidebar links per role as requested
 const VENDOR_NAV_ITEMS: NavItem[] = [
   { title: "Overview", href: "/dashboard/vendor", icon: LayoutDashboard },
   { title: "My Services", href: "/dashboard/vendor/services", icon: Layers },
@@ -70,11 +69,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user, role, signOut } = useAuth()
 
-  // Collapse sidebar state (desktop)
   const [isCollapsed, setIsCollapsed] = React.useState(false)
-  // Mobile sheet open state
   const [isMobileOpen, setIsMobileOpen] = React.useState(false)
-  // Track pathname during render to auto-close sheet on route change without cascading effects
   const [prevPathname, setPrevPathname] = React.useState(pathname)
 
   if (pathname !== prevPathname) {
@@ -82,7 +78,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     setIsMobileOpen(false)
   }
 
-  // Select navigation list by role or URL prefix fallback
   const navItems = React.useMemo(() => {
     if (role === "admin" || pathname.startsWith("/dashboard/admin")) {
       return ADMIN_NAV_ITEMS
@@ -93,7 +88,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     return CUSTOMER_NAV_ITEMS
   }, [role, pathname])
 
-  // Current section title for top bar
   const currentSection = React.useMemo(() => {
     const activeItem = navItems.find((item) => {
       if (item.href === "/dashboard/vendor" || item.href === "/dashboard/customer" || item.href === "/dashboard/admin") {
@@ -125,7 +119,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     ((user as unknown as { subscriptionPlan?: string })?.subscriptionPlan === "premium" ||
       (user as unknown as { isPremium?: boolean })?.isPremium)
 
-  // Reusable Nav Link Item
   const renderNavLink = (item: NavItem, collapsed = false) => {
     const Icon = item.icon
     const isRoot =
@@ -168,11 +161,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Sidebar content (used for desktop & mobile)
   const renderSidebarContent = (collapsed = false) => (
     <div className="flex h-full flex-col justify-between p-4">
       <div className="space-y-6">
-        {/* Brand Logo & Name */}
         <div className={cn("flex items-center gap-2.5 px-2", collapsed && "justify-center px-0")}>
           <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary via-primary/90 to-primary/75 text-primary-foreground shadow-xs">
             <HeartHandshake className="size-5 stroke-[2.2]" />
@@ -189,7 +180,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
 
-        {/* Navigation Section */}
         <div className="space-y-1">
           {!collapsed && (
             <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80 mb-2">
@@ -202,9 +192,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      {/* Bottom Footer Section: Back to Home + User Profile Card + Logout */}
       <div className="space-y-3 border-t border-border/70 pt-4">
-        {/* Link Back to Home */}
         <Link
           href="/"
           onClick={() => setIsMobileOpen(false)}
@@ -218,7 +206,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {!collapsed && <span>Back to WedPlan</span>}
         </Link>
 
-        {/* User Profile Card */}
         <div
           className={cn(
             "flex items-center gap-3 rounded-xl border border-border/70 bg-card/60 p-2.5 shadow-2xs",
@@ -251,7 +238,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
-          {/* Logout Action */}
           <Button
             type="button"
             size="icon-sm"
@@ -270,7 +256,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Desktop Persistent Sidebar */}
       <aside
         className={cn(
           "hidden md:flex flex-col border-r border-border/80 bg-card/40 transition-all duration-200 z-30 sticky top-0 h-screen",
@@ -280,7 +265,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {renderSidebarContent(isCollapsed)}
       </aside>
 
-      {/* Mobile Sidebar Sheet */}
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
         <SheetContent side="left" className="w-72 p-0 border-r border-border">
           <SheetHeader className="sr-only">
@@ -290,12 +274,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </SheetContent>
       </Sheet>
 
-      {/* Main Content Column */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Sticky Dashboard Top Bar */}
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border/80 bg-background/85 px-4 sm:px-6 lg:px-8 backdrop-blur-md">
           <div className="flex items-center gap-3">
-            {/* Mobile Sheet Trigger Button */}
             <Button
               type="button"
               variant="outline"
@@ -307,7 +288,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Menu className="size-4" />
             </Button>
 
-            {/* Desktop Collapse Toggle Button */}
             <Button
               type="button"
               variant="ghost"
@@ -324,7 +304,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               )}
             </Button>
 
-            {/* Current Section Title */}
             <div className="flex items-center gap-2">
               <h1 className="font-serif text-lg sm:text-xl font-semibold text-foreground tracking-tight">
                 {currentSection}
@@ -332,9 +311,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Topbar Right Controls */}
           <div className="flex items-center gap-3">
-            {/* Back to Home Quick Link */}
             <Link href="/">
               <Button
                 variant="outline"
@@ -346,7 +323,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </Button>
             </Link>
 
-            {/* Topbar User Pill */}
             <div className="flex items-center gap-2.5 pl-2 border-l border-border/70">
               <Avatar className="size-8 rounded-full border border-primary/20">
                 {user?.image && <AvatarImage src={user.image} alt={user.name} />}
@@ -364,7 +340,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </p>
               </div>
 
-              {/* Logout Button in Topbar */}
               <Button
                 type="button"
                 variant="ghost"
@@ -380,7 +355,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Main Content Body */}
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>

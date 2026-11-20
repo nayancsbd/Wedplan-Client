@@ -100,7 +100,6 @@ export function DataTable<T>({
 
   return (
     <div className={cn("space-y-4", containerClassName)}>
-      {/* Table Card Wrapper */}
       <div
         className={cn(
           "rounded-2xl border border-border/80 bg-card overflow-hidden shadow-xs",
@@ -127,7 +126,6 @@ export function DataTable<T>({
             </TableHeader>
 
             <TableBody>
-              {/* Loading Skeletons */}
               {isLoading &&
                 Array.from({ length: loadingRows }).map((_, rowIdx) => (
                   <TableRow
@@ -145,7 +143,6 @@ export function DataTable<T>({
                   </TableRow>
                 ))}
 
-              {/* Empty State */}
               {!isLoading && data.length === 0 && (
                 <TableRow>
                   <TableCell
@@ -173,7 +170,6 @@ export function DataTable<T>({
                 </TableRow>
               )}
 
-              {/* Data Rows */}
               {!isLoading &&
                 data.length > 0 &&
                 data.map((item, rowIdx) => (
@@ -204,7 +200,6 @@ export function DataTable<T>({
         </div>
       </div>
 
-      {/* Pagination Controls */}
       {!isLoading && pagination && pagination.totalPages > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 text-xs text-muted-foreground">
           <div>

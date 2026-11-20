@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   title: "WedPlan - Wedding Planning Platform",
   description:
     "Role-based wedding planning platform connecting couples, vendors, and coordinators.",
+  icons: {
+    icon: "/icon.svg",
+  },
 }
 
 export default function RootLayout({

@@ -23,7 +23,6 @@ export default function VendorSubscriptionPage() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
-        {/* Free Plan */}
         <div className="rounded-2xl border border-border/80 bg-card p-6 sm:p-8 flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -58,7 +57,6 @@ export default function VendorSubscriptionPage() {
           </Button>
         </div>
 
-        {/* Premium Pro Plan */}
         <div className="rounded-2xl border-2 border-primary bg-card/90 p-6 sm:p-8 flex flex-col justify-between space-y-6 shadow-md relative overflow-hidden">
           <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-semibold px-4 py-1 rounded-bl-xl uppercase tracking-wider flex items-center gap-1">
             <Crown className="size-3" />

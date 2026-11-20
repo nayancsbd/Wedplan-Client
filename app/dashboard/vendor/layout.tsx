@@ -1,12 +1,6 @@
 import * as React from "react"
 import { requireRole } from "@/lib/auth-guard"
 
-/**
- * Vendor Dashboard Server-Side Guard:
- * Restricts access to vendor accounts only.
- * Wrong role redirects to their own dashboard.
- * Blocked accounts redirect to /blocked.
- */
 export default async function VendorDashboardLayout({
   children,
 }: {
