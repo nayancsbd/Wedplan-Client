@@ -1,37 +1,33 @@
-"use client"
-
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
-import { PageLoader } from "@/components/shared/PageLoader"
+import { redirect } from "next/navigation"
+import { getServerSession } from "@/lib/auth-guard"
 
 /**
- * /dashboard root redirector:
- * Automatically resolves and routes the authenticated user to their role-specific dashboard:
- * - Admin -> /dashboard/admin
- * - Vendor -> /dashboard/vendor
- * - Customer -> /dashboard/customer
+ * Server-Side Dashboard Root Redirector:
+ * Evaluates session on the server before rendering HTML.
+ * Ensures zero flash of unauthenticated or incorrect-role state on page refresh.
  */
-export default function DashboardIndexPage() {
-  const router = useRouter()
-  const { user, role, isPending, isAuthenticated } = useAuth()
+export default async function DashboardRootPage() {
+  const sessionData = await getServerSession()
 
-  React.useEffect(() => {
-    if (!isPending) {
-      if (!isAuthenticated || !user) {
-        router.replace("/signin?redirect=/dashboard")
-        return
-      }
+  // 1. Unauthenticated -> Redirect to sign in with callback
+  if (!sessionData?.user) {
+    redirect("/signin?callbackUrl=/dashboard")
+  }
 
-      if (role === "admin") {
-        router.replace("/dashboard/admin")
-      } else if (role === "vendor") {
-        router.replace("/dashboard/vendor")
-      } else {
-        router.replace("/dashboard/customer")
-      }
-    }
-  }, [isPending, isAuthenticated, user, role, router])
+  const user = sessionData.user
 
-  return <PageLoader message="Redirecting to your wedding dashboard..." fullPage />
+  // 2. Suspended / Blocked -> Redirect to blocked page
+  if (user.isBlocked) {
+    redirect("/blocked")
+  }
+
+  // 3. Authenticated -> Redirect to role's dashboard
+  const role = user.role || "customer"
+  if (role === "admin") {
+    redirect("/dashboard/admin")
+  } else if (role === "vendor") {
+    redirect("/dashboard/vendor")
+  } else {
+    redirect("/dashboard/customer")
+  }
 }
