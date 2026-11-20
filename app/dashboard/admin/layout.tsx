@@ -13,5 +13,5 @@ export default async function AdminDashboardLayout({
   children: React.ReactNode
 }) {
   await requireRole("admin", "/dashboard/admin")
-  return <div className="min-h-screen bg-background">{children}</div>
+  return <>{children}</>
 }

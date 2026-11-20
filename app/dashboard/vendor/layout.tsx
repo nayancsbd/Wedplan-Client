@@ -13,5 +13,5 @@ export default async function VendorDashboardLayout({
   children: React.ReactNode
 }) {
   await requireRole("vendor", "/dashboard/vendor")
-  return <div className="min-h-screen bg-background">{children}</div>
+  return <>{children}</>
 }

@@ -13,5 +13,5 @@ export default async function CustomerDashboardLayout({
   children: React.ReactNode
 }) {
   await requireRole("customer", "/dashboard/customer")
-  return <div className="min-h-screen bg-background">{children}</div>
+  return <>{children}</>
 }
