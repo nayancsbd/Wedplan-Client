@@ -25,9 +25,17 @@ export const metadata: Metadata = {
   description:
     "Role-based wedding planning platform connecting couples, vendors, and coordinators.",
   icons: {
-    icon: "/icon.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 }
+
 
 export default function RootLayout({
   children,

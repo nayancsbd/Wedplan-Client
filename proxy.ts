@@ -1,14 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { getSessionCookie } from "better-auth/cookies"
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl
 
-  // Protected route matching:
-  // - /dashboard and /dashboard/*
-  // - /services/* (subroutes, preserving public /services browse page)
-  // - /profile and /profile/*
-  // - /payment and /payment/*
   const isDashboard =
     pathname === "/dashboard" || pathname.startsWith("/dashboard/")
   const isProfile = pathname === "/profile" || pathname.startsWith("/profile/")
