@@ -60,14 +60,12 @@ export function Footer() {
     { label: "Browse Services", href: "/services" },
     { label: "Vendor Directory", href: "/services" },
     { label: "Wedding Checklist", href: "/services" },
-    { label: "Budget Calculator", href: "/services" },
   ]
 
   const vendorLinks = [
     { label: "Become a Vendor", href: "/signup" },
     { label: "Vendor Dashboard", href: "/dashboard/vendor" },
-    { label: "Pricing & Plans", href: "/services" },
-    { label: "Success Stories", href: "/services" },
+    { label: "Success Stories", href: "/success-stories" },
   ]
 
   const legalLinks = [
@@ -169,10 +167,10 @@ export function Footer() {
               <li className="flex items-center gap-2">
                 <Mail className="size-4 text-primary shrink-0" />
                 <a
-                  href="mailto:concierge@wedplan.com"
+                  href="mailto:[EMAIL_ADDRESS]"
                   className="hover:text-primary transition-colors truncate"
                 >
-                  concierge@wedplan.com
+                  das680970@gmail.com
                 </a>
               </li>
               <li className="flex items-center gap-2">
@@ -181,7 +179,7 @@ export function Footer() {
                   href="tel:+18005559337"
                   className="hover:text-primary transition-colors"
                 >
-                  +1 (800) 555-WEDP
+                  +88 016*****804
                 </a>
               </li>
               <li className="flex items-start gap-2 pt-1">

@@ -15,7 +15,7 @@ export default async function ProfilePage() {
   }
 
   if (role === "admin") {
-    redirect("/dashboard/admin")
+    redirect("/dashboard/admin/profile")
   }
 
   redirect("/dashboard/customer/profile")

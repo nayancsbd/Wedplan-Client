@@ -465,7 +465,7 @@ export function ProfileSettingsForm({
               </Label>
               <Input
                 id="profile-subscription"
-                value={isPremium ? "Premium Membership" : "Standard Free Plan"}
+                value={role === "admin" ? "Administrator Access" : isPremium ? "Premium Membership" : "Standard Free Plan"}
                 disabled
                 className="bg-muted/50 h-10 text-sm cursor-not-allowed text-muted-foreground"
               />
@@ -506,7 +506,7 @@ export function ProfileSettingsForm({
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="profile-bio" className="text-xs font-semibold text-foreground">
-                {isVendor ? "Studio & Service Bio" : "Wedding Vision / Notes"}
+                {isVendor ? "Studio & Service Bio" : role === "admin" ? "Administrator Bio / Notes" : "Wedding Vision / Notes"}
               </Label>
               <Textarea
                 id="profile-bio"
@@ -515,6 +515,8 @@ export function ProfileSettingsForm({
                 placeholder={
                   isVendor
                     ? "Tell couples about your experience, awards, creative style, and what makes your wedding service exceptional..."
+                    : role === "admin"
+                    ? "Internal administrator bio, team notes, or responsibilities..."
                     : "Share details about your wedding style, vibe, or special notes for vendors..."
                 }
                 rows={4}

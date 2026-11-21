@@ -35,6 +35,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { AccessDenied } from "@/components/shared"
 
 export interface NavItem {
   title: string
@@ -63,11 +64,12 @@ const ADMIN_NAV_ITEMS: NavItem[] = [
   { title: "Manage Users", href: "/dashboard/admin/users", icon: Users },
   { title: "Manage Services", href: "/dashboard/admin/services", icon: Briefcase },
   { title: "Transactions", href: "/dashboard/admin/transactions", icon: Receipt },
+  { title: "Profile Settings", href: "/dashboard/admin/profile", icon: UserCog },
 ]
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const { user, role, signOut } = useAuth()
+  const { user, role, signOut, isPending, isAuthenticated } = useAuth()
 
   const [isCollapsed, setIsCollapsed] = React.useState(false)
   const [isMobileOpen, setIsMobileOpen] = React.useState(false)
@@ -77,6 +79,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     setPrevPathname(pathname)
     setIsMobileOpen(false)
   }
+
+  const isUnauthorizedRole = React.useMemo(() => {
+    if (isPending || !isAuthenticated || !role) return false
+
+    if (pathname.startsWith("/dashboard/admin") && role !== "admin") {
+      return true
+    }
+    if (pathname.startsWith("/dashboard/vendor") && role !== "vendor") {
+      return true
+    }
+    if (pathname.startsWith("/dashboard/customer") && role !== "customer") {
+      return true
+    }
+    return false
+  }, [isPending, isAuthenticated, role, pathname])
 
   const navItems = React.useMemo(() => {
     if (role === "admin" || pathname.startsWith("/dashboard/admin")) {
@@ -356,7 +373,23 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="flex-1 overflow-y-auto">
-          {children}
+          {isUnauthorizedRole ? (
+            <div className="p-4 sm:p-8">
+              <AccessDenied
+                title="Access Restricted"
+                message={`You do not have permission to access the ${
+                  pathname.startsWith("/dashboard/admin")
+                    ? "Admin"
+                    : pathname.startsWith("/dashboard/vendor")
+                    ? "Vendor"
+                    : "Customer"
+                } Portal. Your account is signed in as ${role || "another role"}.`}
+                showDashboardLink={true}
+              />
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>

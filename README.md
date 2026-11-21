@@ -1,4 +1,4 @@
-# WedPlan — Role-Based Wedding Planning Platform
+# WedPlan - A Wedding Planning Platform
 
 WedPlan is a full-featured, role-based wedding planning platform inspired by The Knot and Zola. It connects couples planning their special day with verified wedding service vendors across photography, venues, catering, floral design, styling, and bridal fashion, overseen by an administrative moderation dashboard.
 
@@ -80,9 +80,8 @@ WedPlan is a full-featured, role-based wedding planning platform inspired by The
 
 ## Repository Links & Live Application
 
-- **Live Application**: [https://wedplan-client.vercel.app](https://wedplan-client.vercel.app)
-- **Client Repository**: [https://github.com/your-username/wedplan-client](https://github.com/your-username/wedplan-client)
-- **Server Repository**: [https://github.com/your-username/wedplan-server](https://github.com/your-username/wedplan-server)
+- **Client Repository**: [https://github.com/nayancsbd/wedplan-client](https://github.com/nayancsbd/wedplan-client)
+- **Server Repository**: [https://github.com/nayancsbd/wedplan-server](https://github.com/nayancsbd/wedplan-server)
 
 ---
 
@@ -90,11 +89,6 @@ WedPlan is a full-featured, role-based wedding planning platform inspired by The
 
 The client requires the following environment variables configured in `.env.local` for development or in Vercel Project Settings for production:
 
-| Variable | Description | Example Value |
-| :--- | :--- | :--- |
-| `NEXT_PUBLIC_APP_URL` | Canonical public URL of the Next.js frontend | `http://localhost:3000` (Local) / `https://wedplan-client.vercel.app` (Prod) |
-| `API_URL` | Express backend server base URL for Next.js rewrites proxy | `http://localhost:5001` (Local) / `https://wedplan-api.onrender.com` (Prod) |
-| `NEXT_PUBLIC_API_URL` | Optional client-side API endpoint fallback | `http://localhost:5001/api` |
 
 The repository contains a committed `.env.example` file. All sensitive `.env` files are ignored by git.
 
@@ -109,7 +103,7 @@ The repository contains a committed `.env.example` file. All sensitive `.env` fi
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/your-username/wedplan-client.git
+git clone https://github.com/nayancsbd/wedplan-client.git
 cd wedplan-client
 ```
 
@@ -167,17 +161,17 @@ When configuring Google OAuth credentials in the Google Cloud Console for produc
    - Go to **APIs & Services > Credentials**.
    - Select your **OAuth 2.0 Client ID**.
 2. **Authorized JavaScript Origins**:
-   - `http://localhost:3000` (Local development)
-   - `https://wedplan-client.vercel.app` (Your production Vercel domain)
-   - `https://your-custom-domain.com` (If using a custom domain)
+   -  (Local development)
+   -  (Your production Vercel domain)
+   -  (If using a custom domain)
 3. **Authorized Redirect URIs**:
-   - `http://localhost:3000/api/auth/callback/google` (Proxied locally)
-   - `http://localhost:5001/api/auth/callback/google` (Direct server locally)
-   - `https://wedplan-client.vercel.app/api/auth/callback/google` (Production client domain via proxy)
-   - `https://your-backend-service.onrender.com/api/auth/callback/google` (Production server direct)
+   -  (Proxied locally)
+   -  (Direct server locally)
+   -  (Production client domain via proxy)
+   -  (Production server direct)
 4. **Backend Environment Variables**:
-   - Update `CLIENT_URL` in the server environment to your Vercel URL (`https://wedplan-client.vercel.app`).
-   - Update `BETTER_AUTH_URL` to the production backend URL (`https://your-backend-service.onrender.com`).
+   - Update `CLIENT_URL` in the server environment to your Vercel URL ().
+   - Update `BETTER_AUTH_URL` to the production backend URL ().
    - Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
 
 ---
@@ -190,8 +184,8 @@ When configuring Stripe Checkout subscriptions for production:
    - Go to **Developers > Webhooks** in the Stripe Dashboard (Test or Live mode).
    - Click **Add an endpoint**.
 2. **Endpoint URL**:
-   - URL: `https://your-backend-service.onrender.com/api/webhooks/stripe`
-   - Alternatively, if proxying through Vercel: `https://wedplan-client.vercel.app/api/webhooks/stripe`
+   - URL: 
+   - Alternatively, if proxying through Vercel: 
 3. **Select Events to Listen For**:
    - `checkout.session.completed`
    - `invoice.payment_succeeded`

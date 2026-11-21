@@ -197,12 +197,16 @@ export default function CustomerBookingsPage() {
 
     try {
       try {
-        await api.patch(`/api/bookings/${bookingId}/cancel`, { status: "cancelled" })
+        await api.patch(`/api/customer/bookings/${bookingId}/cancel`, { status: "cancelled" })
       } catch {
         try {
-          await api.patch(`/api/bookings/${bookingId}/status`, { status: "cancelled" })
+          await api.patch(`/api/bookings/${bookingId}/cancel`, { status: "cancelled" })
         } catch {
-          await api.patch(`/api/bookings/${bookingId}`, { status: "cancelled" })
+          try {
+            await api.patch(`/api/bookings/${bookingId}/status`, { status: "cancelled" })
+          } catch {
+            await api.patch(`/api/bookings/${bookingId}`, { status: "cancelled" })
+          }
         }
       }
 

@@ -267,18 +267,25 @@ export default function VendorBookingRequestsPage() {
 
     try {
       try {
-        await api.patch(`/api/bookings/${bookingId}/status`, { status: newStatus })
-      } catch (patchErr: unknown) {
-        const status = (patchErr as { status?: number })?.status
-        if (status === 409) throw patchErr
+        await api.patch(`/api/vendor/bookings/${bookingId}/status`, { status: newStatus })
+      } catch (firstErr: unknown) {
+        const firstStatus = (firstErr as { status?: number })?.status
+        if (firstStatus === 409) throw firstErr
 
         try {
-          await api.patch(`/api/bookings/${bookingId}`, { status: newStatus })
-        } catch (secondErr: unknown) {
-          const secondStatus = (secondErr as { status?: number })?.status
-          if (secondStatus === 409) throw secondErr
+          await api.patch(`/api/bookings/${bookingId}/status`, { status: newStatus })
+        } catch (patchErr: unknown) {
+          const status = (patchErr as { status?: number })?.status
+          if (status === 409) throw patchErr
 
-          await api.post(`/api/bookings/${bookingId}/${newStatus}`, {})
+          try {
+            await api.patch(`/api/vendor/bookings/${bookingId}`, { status: newStatus })
+          } catch (secondErr: unknown) {
+            const secondStatus = (secondErr as { status?: number })?.status
+            if (secondStatus === 409) throw secondErr
+
+            await api.post(`/api/vendor/bookings/${bookingId}/${newStatus}`, {})
+          }
         }
       }
 

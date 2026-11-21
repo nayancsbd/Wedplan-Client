@@ -48,6 +48,18 @@ export function Navbar() {
     return "/dashboard"
   }
 
+  const getProfileHref = () => {
+    if (role === "admin") return "/dashboard/admin/profile"
+    if (role === "vendor") return "/dashboard/vendor/profile"
+    return "/dashboard/customer/profile"
+  }
+
+  const getDashboardButtonLabel = () => {
+    if (role === "admin") return "Admin Dashboard"
+    if (role === "vendor") return "Vendor Dashboard"
+    return "Customer Dashboard"
+  }
+
   const isPremiumVendor =
     role === "vendor" &&
     (user?.subscriptionPlan?.toLowerCase().includes("prem") ||
@@ -116,7 +128,18 @@ export function Navbar() {
           {isPending ? (
             <div className="size-8 rounded-full bg-muted animate-pulse" />
           ) : isAuthenticated && user ? (
-            <DropdownMenu>
+            <>
+              <Link href={getDashboardHref()}>
+                <Button
+                  size="sm"
+                  className="gap-1.5 shadow-xs font-serif font-medium cursor-pointer"
+                >
+                  <LayoutDashboard className="size-3.5" />
+                  <span>{getDashboardButtonLabel()}</span>
+                </Button>
+              </Link>
+
+              <DropdownMenu>
               <DropdownMenuTrigger
                 className="group flex items-center gap-2.5 rounded-full p-1 transition-colors hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 cursor-pointer"
                 aria-label="User navigation menu"
@@ -199,7 +222,7 @@ export function Navbar() {
                   </DropdownMenuItem>
 
                   <DropdownMenuItem
-                    onClick={() => router.push("/profile")}
+                    onClick={() => router.push(getProfileHref())}
                     className="cursor-pointer gap-2.5 px-2.5 py-2 text-sm text-foreground focus:bg-primary/10 focus:text-primary rounded-md"
                   >
                     <UserIcon className="size-4 text-muted-foreground" />
@@ -219,6 +242,7 @@ export function Navbar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           ) : (
             <>
               <Link href="/signin">
@@ -237,6 +261,18 @@ export function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
+          {isAuthenticated && user && (
+            <Link href={getDashboardHref()}>
+              <Button
+                size="sm"
+                className="text-xs h-9 px-3 gap-1.5 font-serif cursor-pointer shadow-xs"
+              >
+                <LayoutDashboard className="size-3.5" />
+                <span>{getDashboardButtonLabel()}</span>
+              </Button>
+            </Link>
+          )}
+
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger
               aria-label="Open mobile navigation"
@@ -335,7 +371,7 @@ export function Navbar() {
                         className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
                       >
                         <LayoutDashboard className="size-4 text-primary" />
-                        <span>Dashboard</span>
+                        <span>{getDashboardButtonLabel()}</span>
                         {role && (
                           <span className="ml-auto rounded-md bg-secondary px-2 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
                             {role}
@@ -344,7 +380,7 @@ export function Navbar() {
                       </Link>
 
                       <Link
-                        href="/profile"
+                        href={getProfileHref()}
                         onClick={() => setMobileMenuOpen(false)}
                         className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
                       >

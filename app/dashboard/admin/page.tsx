@@ -87,9 +87,9 @@ export default function AdminDashboardPage() {
         }
 
         const [usersRes, servicesRes, txRes] = await Promise.allSettled([
-          fetch("/api/admin/users", { headers: { Accept: "application/json" }, credentials: "include" }),
-          fetch("/api/admin/services", { headers: { Accept: "application/json" }, credentials: "include" }),
-          fetch("/api/admin/transactions", { headers: { Accept: "application/json" }, credentials: "include" }),
+          fetch("/api/admin/users?limit=100", { headers: { Accept: "application/json" }, credentials: "include" }),
+          fetch("/api/admin/services?limit=100", { headers: { Accept: "application/json" }, credentials: "include" }),
+          fetch("/api/admin/transactions?limit=100", { headers: { Accept: "application/json" }, credentials: "include" }),
         ])
 
         let userCount = 0
@@ -106,6 +106,8 @@ export default function AdminDashboardPage() {
             ? uJson
             : Array.isArray(uJson?.data)
             ? uJson.data
+            : Array.isArray(uJson?.data?.users)
+            ? uJson.data.users
             : Array.isArray(uJson?.users)
             ? uJson.users
             : []
@@ -121,6 +123,8 @@ export default function AdminDashboardPage() {
             ? sJson
             : Array.isArray(sJson?.data)
             ? sJson.data
+            : Array.isArray(sJson?.data?.services)
+            ? sJson.data.services
             : Array.isArray(sJson?.services)
             ? sJson.services
             : []
@@ -133,7 +137,7 @@ export default function AdminDashboardPage() {
             const vendorObj = (s.vendor || {}) as Record<string, unknown>
             return {
               id: String(s.id || s._id || `pending_${idx + 1}`),
-              title: String(s.title || s.name || "Wedding Service"),
+              title: String(s.serviceName || s.title || s.name || "Wedding Service"),
               vendorName: String(vendorObj.businessName || vendorObj.name || s.vendorName || "Wedding Vendor"),
               category: String(s.category || "General"),
               price: Number(s.price || s.startingPrice || 0),
@@ -149,6 +153,8 @@ export default function AdminDashboardPage() {
             ? tJson
             : Array.isArray(tJson?.data)
             ? tJson.data
+            : Array.isArray((tJson?.data as Record<string, unknown>)?.transactions)
+            ? ((tJson?.data as Record<string, unknown>)?.transactions as unknown[])
             : Array.isArray(tJson?.transactions)
             ? tJson.transactions
             : []
@@ -298,7 +304,7 @@ export default function AdminDashboardPage() {
           </div>
 
           <Link
-            href="/dashboard/admin/services"
+            href="/dashboard/admin/services?status=pending"
             className={buttonVariants({
               variant: "default",
               className: "gap-1.5 text-xs font-medium cursor-pointer w-full sm:w-auto",
@@ -373,7 +379,7 @@ export default function AdminDashboardPage() {
             <span>Pending Service Review Queue</span>
           </h2>
           <Link
-            href="/dashboard/admin/services"
+            href="/dashboard/admin/services?status=pending"
             className={buttonVariants({
               variant: "ghost",
               size: "sm",

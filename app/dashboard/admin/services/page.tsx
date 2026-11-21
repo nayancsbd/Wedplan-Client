@@ -53,7 +53,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { api } from "@/lib/api"
+import { useSearchParams } from "next/navigation"
+import { api, apiFetch } from "@/lib/api"
 
 interface AdminServiceItem {
   id: string
@@ -81,12 +82,21 @@ const CATEGORIES = [
   "Wedding Fashion",
 ]
 
-export default function AdminServicesPage() {
+function AdminServicesContent() {
+  const searchParams = useSearchParams()
+  const initialStatusParam = searchParams.get("status")?.toLowerCase()
+  const validStatus: StatusFilter =
+    initialStatusParam === "pending" ||
+    initialStatusParam === "approved" ||
+    initialStatusParam === "rejected"
+      ? initialStatusParam
+      : "all"
+
   const [services, setServices] = React.useState<AdminServiceItem[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
   const [hasError, setHasError] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
-  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>("all")
+  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>(validStatus)
   const [categoryFilter, setCategoryFilter] = React.useState("All Categories")
   const [actingServiceId, setActingServiceId] = React.useState<string | null>(null)
   const [selectedPreview, setSelectedPreview] = React.useState<AdminServiceItem | null>(null)
@@ -96,34 +106,59 @@ export default function AdminServicesPage() {
     setRefreshTrigger((prev) => prev + 1)
   }, [])
 
+  const [prevParam, setPrevParam] = React.useState(initialStatusParam)
+  if (initialStatusParam !== prevParam) {
+    setPrevParam(initialStatusParam)
+    if (initialStatusParam && ["pending", "approved", "rejected", "all"].includes(initialStatusParam)) {
+      setStatusFilter(initialStatusParam as StatusFilter)
+    }
+  }
+
   React.useEffect(() => {
     let isMounted = true
 
     const fetchServices = async () => {
       setIsLoading(true)
       try {
-        const endpoints = ["/api/admin/services", "/api/services/all", "/api/services"]
+        const endpoints = ["/api/admin/services?limit=100", "/api/admin/services"]
         let rawList: AdminServiceItem[] = []
 
         for (const ep of endpoints) {
           try {
-            const res = await fetch(ep, {
-              headers: { Accept: "application/json" },
-              credentials: "include",
-            })
+            let json: unknown = null
+            try {
+              json = await apiFetch(ep)
+            } catch {
+              const res = await fetch(ep, {
+                headers: { Accept: "application/json" },
+                credentials: "include",
+              })
+              if (res.ok) {
+                json = await res.json().catch(() => null)
+              }
+            }
 
-            if (res.ok) {
-              const json = await res.json().catch(() => null)
+            if (json) {
               let arrayData: unknown[] = []
 
-              if (Array.isArray(json)) arrayData = json
-              else if (json && typeof json === "object") {
+              if (Array.isArray(json)) {
+                arrayData = json
+              } else if (json && typeof json === "object") {
                 const jsonObj = json as Record<string, unknown>
-                if (Array.isArray(jsonObj.data)) arrayData = jsonObj.data
-                else if (Array.isArray(jsonObj.services)) arrayData = jsonObj.services
+                if (Array.isArray(jsonObj.data)) {
+                  arrayData = jsonObj.data
+                } else if (
+                  jsonObj.data &&
+                  typeof jsonObj.data === "object" &&
+                  Array.isArray((jsonObj.data as Record<string, unknown>).services)
+                ) {
+                  arrayData = (jsonObj.data as Record<string, unknown>).services as unknown[]
+                } else if (Array.isArray(jsonObj.services)) {
+                  arrayData = jsonObj.services
+                }
               }
 
-              if (arrayData.length > 0 || res.status === 200) {
+              if (arrayData.length > 0) {
                 rawList = arrayData.map((item, idx) => {
                   const rec = (item || {}) as Record<string, unknown>
                   const vendorObj = (rec.vendor || {}) as Record<string, unknown>
@@ -137,7 +172,7 @@ export default function AdminServicesPage() {
 
                   return {
                     id: String(rec.id || rec._id || `srv_${idx + 1}`),
-                    title: String(rec.title || rec.name || "Wedding Service"),
+                    title: String(rec.serviceName || rec.title || rec.name || "Wedding Service"),
                     category: String(rec.category || "General"),
                     price: Number(rec.price || rec.startingPrice || 0),
                     location: String(rec.location || rec.city || "Various"),
@@ -941,5 +976,23 @@ export default function AdminServicesPage() {
         </Dialog>
       )}
     </div>
+  )
+}
+
+export default function AdminServicesPage() {
+  return (
+    <React.Suspense
+      fallback={
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-96" />
+          <div className="h-64 rounded-2xl border border-border/80 bg-card p-6 flex items-center justify-center">
+            <Loader2 className="size-6 animate-spin text-primary" />
+          </div>
+        </div>
+      }
+    >
+      <AdminServicesContent />
+    </React.Suspense>
   )
 }

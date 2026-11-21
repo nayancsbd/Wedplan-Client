@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { apiFetch } from "@/lib/api"
 
 interface AdminTransactionItem {
   id: string
@@ -48,32 +49,49 @@ export default function AdminTransactionsPage() {
       setIsLoading(true)
       try {
         const endpoints = [
+          "/api/admin/transactions?limit=100",
           "/api/admin/transactions",
           "/api/payments/transactions",
-          "/api/transactions",
         ]
 
         let rawList: AdminTransactionItem[] = []
 
         for (const ep of endpoints) {
           try {
-            const res = await fetch(ep, {
-              headers: { Accept: "application/json" },
-              credentials: "include",
-            })
+            let json: unknown = null
+            try {
+              json = await apiFetch(ep)
+            } catch {
+              const res = await fetch(ep, {
+                headers: { Accept: "application/json" },
+                credentials: "include",
+              })
+              if (res.ok) {
+                json = await res.json().catch(() => null)
+              }
+            }
 
-            if (res.ok) {
-              const json = await res.json().catch(() => null)
+            if (json) {
               let arrayData: unknown[] = []
 
-              if (Array.isArray(json)) arrayData = json
-              else if (json && typeof json === "object") {
+              if (Array.isArray(json)) {
+                arrayData = json
+              } else if (json && typeof json === "object") {
                 const jsonObj = json as Record<string, unknown>
-                if (Array.isArray(jsonObj.data)) arrayData = jsonObj.data
-                else if (Array.isArray(jsonObj.transactions)) arrayData = jsonObj.transactions
+                if (Array.isArray(jsonObj.data)) {
+                  arrayData = jsonObj.data
+                } else if (
+                  jsonObj.data &&
+                  typeof jsonObj.data === "object" &&
+                  Array.isArray((jsonObj.data as Record<string, unknown>).transactions)
+                ) {
+                  arrayData = (jsonObj.data as Record<string, unknown>).transactions as unknown[]
+                } else if (Array.isArray(jsonObj.transactions)) {
+                  arrayData = jsonObj.transactions
+                }
               }
 
-              if (arrayData.length > 0 || res.status === 200) {
+              if (arrayData.length > 0) {
                 rawList = arrayData.map((item, idx) => {
                   const rec = (item || {}) as Record<string, unknown>
                   const vendorObj = (rec.vendor || {}) as Record<string, unknown>
