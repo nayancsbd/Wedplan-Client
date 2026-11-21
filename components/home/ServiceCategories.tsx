@@ -74,10 +74,10 @@ export function ServiceCategories() {
     <section className="py-16 sm:py-24 bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
         <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
           whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.55 }}
+          transition={{ duration: 0.4 }}
         >
           <SectionHeading
             badge="Curated Directory"
@@ -92,19 +92,19 @@ export function ServiceCategories() {
             return (
               <motion.div
                 key={cat.slug}
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
                 whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{
-                  duration: 0.5,
-                  delay: shouldReduceMotion ? 0 : index * 0.08,
+                  duration: 0.35,
+                  delay: shouldReduceMotion ? 0 : index * 0.05,
                 }}
               >
                 <Link
                   href={`/services?category=${cat.slug}`}
-                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1"
+                  aria-label={`Explore ${cat.title} services`}
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-border/80 bg-card p-6 transition-all duration-300 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden"
                 >
-                  {/* Subtle hover gradient background */}
                   <div className="pointer-events-none absolute -right-12 -top-12 size-36 rounded-full bg-primary/10 blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:bg-primary/20" />
 
                   <div className="space-y-4">

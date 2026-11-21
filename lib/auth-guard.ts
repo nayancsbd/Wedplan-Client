@@ -38,10 +38,8 @@ export async function getServerSession(): Promise<{
       }
     }
   } catch {
-    // Auth client getSession fallback
   }
 
-  // Direct backend fallback call if SSR client fetch differs
   try {
     const rawApiUrl =
       process.env.API_URL ||
@@ -70,7 +68,6 @@ export async function getServerSession(): Promise<{
       }
     }
   } catch {
-    // Both attempts failed
   }
 
   return null
@@ -82,21 +79,18 @@ export async function requireRole(
 ): Promise<ServerSessionUser> {
   const sessionData = await getServerSession()
 
-  // 1. Missing session -> redirect to signin with callbackUrl
   if (!sessionData?.user) {
     redirect(`/signin?callbackUrl=${encodeURIComponent(currentPath)}`)
   }
 
   const user = sessionData.user
 
-  // 2. Blocked account -> redirect to suspended page and sign out
   if (user.isBlocked) {
     redirect("/blocked")
   }
 
   const role = user.role || "customer"
 
-  // 3. Role mismatch -> redirect to the user's appropriate role dashboard
   if (role !== allowedRole) {
     if (role === "admin") {
       redirect("/dashboard/admin")

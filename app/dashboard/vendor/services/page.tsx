@@ -13,6 +13,7 @@ import {
   Loader2,
   Save,
   AlertTriangle,
+  Layers,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -20,6 +21,8 @@ import { SectionHeading } from "@/components/shared/SectionHeading"
 import { DataTable, type DataTableColumn } from "@/components/dashboard/DataTable"
 import { StatusBadge } from "@/components/shared/StatusBadge"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/shared/EmptyState"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -447,19 +450,201 @@ export default function VendorServicesPage() {
         </div>
       )}
 
-      <DataTable
-        columns={columns}
-        data={services}
-        isLoading={isLoading}
-        emptyState={{
-          title: "No services published yet",
-          description: "Create your first wedding package or venue listing to start receiving inquiries from couples.",
-          action: {
-            label: "Add Your First Service",
-            href: "/dashboard/vendor/services/new",
-          },
-        }}
-      />
+      <div className="hidden lg:block">
+        <DataTable
+          columns={columns}
+          data={services}
+          isLoading={isLoading}
+          emptyState={{
+            title: "No services published yet",
+            description: "Create your first wedding package or venue listing to start receiving inquiries from couples.",
+            action: {
+              label: "Add Your First Service",
+              href: "/dashboard/vendor/services/new",
+            },
+          }}
+        />
+      </div>
+
+      <div className="lg:hidden space-y-4">
+        {isLoading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="rounded-2xl border border-border/80 bg-card p-4 space-y-3"
+              >
+                <div className="flex items-center gap-3">
+                  <Skeleton className="size-14 rounded-xl shrink-0" />
+                  <div className="space-y-1.5 flex-1 min-w-0">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                  <Skeleton className="h-5 w-20" />
+                  <Skeleton className="h-7 w-24 rounded-lg" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : services.length === 0 ? (
+          <EmptyState
+            icon={Layers}
+            title="No services published yet"
+            description="Create your first wedding package or venue listing to start receiving inquiries from couples."
+            action={{
+              label: "Add Your First Service",
+              href: "/dashboard/vendor/services/new",
+            }}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {services.map((item) => {
+              const isActive = item.isActive !== false
+              const rawStatus = (item.status || "approved").toLowerCase()
+              const isRejected = rawStatus === "rejected"
+              const isPending = rawStatus === "pending"
+
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 shadow-xs"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="relative size-16 overflow-hidden rounded-xl bg-muted border border-border shrink-0">
+                        {item.imageUrl ? (
+                          <Image
+                            src={item.imageUrl}
+                            alt={item.title}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center text-primary/40">
+                            <ImageIcon className="size-6" />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-semibold text-foreground text-sm line-clamp-1">
+                          {item.title}
+                        </h4>
+                        <p className="text-xs text-muted-foreground capitalize mt-0.5">
+                          {item.category}
+                          {item.location && ` • ${item.location}`}
+                        </p>
+                        <p className="font-bold text-foreground text-sm mt-1">
+                          ${Number(item.startingPrice || 0).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/60">
+                      <div className="space-y-1">
+                        <StatusBadge
+                          status={rawStatus}
+                          label={
+                            isRejected
+                              ? "Rejected"
+                              : isPending
+                              ? "Pending Approval"
+                              : "Approved"
+                          }
+                        />
+                        {isRejected && (
+                          <p className="text-[11px] text-destructive/90">
+                            Hidden from public
+                          </p>
+                        )}
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant={isActive ? "outline" : "secondary"}
+                        size="sm"
+                        onClick={() => handleToggleAvailability(item)}
+                        className={`h-7 px-2.5 text-xs font-medium cursor-pointer gap-1.5 ${
+                          isActive
+                            ? "border-emerald-500/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                        title="Toggle client booking availability"
+                      >
+                        <Power className="size-3" />
+                        <span>{isActive ? "Active" : "Paused"}</span>
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
+                    <Link href={`/services/${item.id}`} className="flex-1 sm:flex-initial">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs h-8 gap-1.5 cursor-pointer text-muted-foreground hover:text-foreground"
+                      >
+                        <ExternalLink className="size-3.5" />
+                        <span>View</span>
+                      </Button>
+                    </Link>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenEdit(item)}
+                      className="flex-1 sm:flex-initial text-xs h-8 gap-1.5 cursor-pointer text-muted-foreground hover:text-primary"
+                    >
+                      <Edit2 className="size-3.5" />
+                      <span>Edit</span>
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger
+                        render={
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setServiceToDelete(item)}
+                            className="flex-1 sm:flex-initial text-xs h-8 gap-1.5 cursor-pointer text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+                          />
+                        }
+                      >
+                        <Trash2 className="size-3.5" />
+                        <span>Delete</span>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Wedding Service?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to permanently delete &ldquo;{item.title}&rdquo;?
+                            This action cannot be undone and will remove the package from the WedPlan marketplace.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={handleDeleteConfirmed}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {isDeleting ? "Deleting..." : "Delete Service"}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
 
       {editingService && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

@@ -424,7 +424,8 @@ export default function AdminServicesPage() {
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
+        <div className="space-y-4">
+          <div className="hidden lg:block overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-muted/40 border-b border-border/80 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -653,6 +654,207 @@ export default function AdminServicesPage() {
             </table>
           </div>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+          {filteredServices.map((item) => {
+            const isPending = item.status === "pending"
+            const isActing = actingServiceId === item.id
+
+            return (
+              <div
+                key={item.id}
+                className={`rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 shadow-xs ${
+                  isPending ? "border-l-4 border-l-amber-500 bg-amber-500/5" : ""
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="relative size-16 rounded-xl overflow-hidden bg-muted/60 shrink-0 border border-border/60">
+                      {item.images[0] ? (
+                        <Image
+                          src={item.images[0]}
+                          alt={item.title}
+                          fill
+                          sizes="64px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="size-full flex items-center justify-center text-primary bg-primary/10">
+                          <Sparkles className="size-6" />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <h4 className="font-semibold text-foreground text-sm line-clamp-1 flex items-center gap-1.5">
+                        <span className="truncate">{item.title}</span>
+                        {isPending && (
+                          <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-amber-500 text-white shrink-0">
+                            Review
+                          </span>
+                        )}
+                      </h4>
+                      <p className="text-xs text-muted-foreground capitalize mt-0.5">
+                        {item.category}
+                      </p>
+                      <p className="font-bold text-foreground text-sm mt-1">
+                        ${item.price.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 pt-2 border-t border-border/60 text-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-muted-foreground flex items-center gap-1.5 truncate">
+                        <Store className="size-3.5 text-primary shrink-0" />
+                        <span className="truncate">{item.vendorName}</span>
+                      </span>
+                      <StatusBadge status={item.status} />
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2 text-muted-foreground">
+                      <span className="flex items-center gap-1.5 truncate">
+                        <MapPin className="size-3.5 text-primary shrink-0" />
+                        <span className="truncate">{item.location}</span>
+                      </span>
+                      <span>{formatDisplayDate(item.createdAt)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-border/60">
+                  {isPending && (
+                    <>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={isActing}
+                        onClick={() => handleUpdateStatus(item.id, "approved")}
+                        className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1 cursor-pointer flex-1 sm:flex-initial"
+                      >
+                        {isActing ? (
+                          <Loader2 className="size-3 animate-spin" />
+                        ) : (
+                          <Check className="size-3" />
+                        )}
+                        <span>Approve</span>
+                      </Button>
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={isActing}
+                        onClick={() => handleUpdateStatus(item.id, "rejected")}
+                        className="h-8 px-2.5 text-xs text-destructive hover:bg-destructive/10 border-destructive/30 gap-1 cursor-pointer flex-1 sm:flex-initial"
+                      >
+                        <X className="size-3" />
+                        <span>Reject</span>
+                      </Button>
+                    </>
+                  )}
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedPreview(item)}
+                    className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground cursor-pointer gap-1"
+                  >
+                    <Eye className="size-3.5" />
+                    <span>Preview</span>
+                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isActing}
+                          className="size-8 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                        />
+                      }
+                    >
+                      <MoreVertical className="size-3.5" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-40 text-xs">
+                      <DropdownMenuLabel className="text-[11px] text-muted-foreground">
+                        Change Status
+                      </DropdownMenuLabel>
+                      <DropdownMenuItem
+                        onClick={() => handleUpdateStatus(item.id, "approved")}
+                        className="gap-2 cursor-pointer"
+                      >
+                        <Check className="size-3.5 text-emerald-600" />
+                        <span>Approve Listing</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleUpdateStatus(item.id, "pending")}
+                        className="gap-2 cursor-pointer"
+                      >
+                        <Clock className="size-3.5 text-amber-600" />
+                        <span>Mark Pending</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleUpdateStatus(item.id, "rejected")}
+                        className="gap-2 cursor-pointer"
+                      >
+                        <X className="size-3.5 text-destructive" />
+                        <span>Reject Listing</span>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem
+                        onClick={() => window.open(`/services/${item.id}`, "_blank")}
+                        className="gap-2 cursor-pointer"
+                      >
+                        <ExternalLink className="size-3.5" />
+                        <span>View Public Page</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={isActing}
+                          className="size-8 p-0 text-destructive hover:bg-destructive/10 border-destructive/20 cursor-pointer"
+                        />
+                      }
+                    >
+                      <Trash2 className="size-3.5" />
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Wedding Service?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to permanently delete &ldquo;{item.title}&rdquo; from the platform? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDeleteService(item.id, item.title)}
+                          className="bg-destructive hover:bg-destructive/90 text-white"
+                        >
+                          Yes, Delete Service
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
       )}
 
       {selectedPreview && (

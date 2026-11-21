@@ -1,8 +1,3 @@
-/**
- * Utility functions for normalizing service objects from backend API responses.
- * Ensures compatibility across various MongoDB / Express response shapes.
- */
-
 export interface ServiceItem {
   id: string
   title: string

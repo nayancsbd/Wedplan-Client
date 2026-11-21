@@ -9,11 +9,6 @@ export interface AppShellProps {
   children: React.ReactNode
 }
 
-/**
- * AppShell manages persistent UI chrome.
- * Hides public Navbar and Footer inside /dashboard routes
- * so dashboard layouts can provide their own dedicated navigation shell.
- */
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname()
   const isDashboardRoute = pathname?.startsWith("/dashboard")

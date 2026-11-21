@@ -49,7 +49,6 @@
 }
 
 :root {
-    /* Wedding Palette - Light Mode: Warm soft ivory background, dusty-rose primary, deep charcoal text */
     --background: oklch(0.985 0.008 75);
     --foreground: oklch(0.24 0.015 280);
     --card: oklch(0.995 0.004 75);
@@ -86,7 +85,6 @@
 }
 
 .dark {
-    /* Wedding Palette - Dark Mode: Deep charcoal luxury background, luminous dusty rose primary */
     --background: oklch(0.18 0.015 280);
     --foreground: oklch(0.96 0.008 75);
     --card: oklch(0.22 0.015 280);

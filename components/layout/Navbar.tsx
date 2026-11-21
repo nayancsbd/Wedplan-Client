@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -40,7 +41,6 @@ export function Navbar() {
   const { user, role, isPending, isAuthenticated, signOut } = useAuth()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
-  // Determine role-specific dashboard link
   const getDashboardHref = () => {
     if (role === "admin") return "/dashboard/admin"
     if (role === "vendor") return "/dashboard/vendor"
@@ -48,14 +48,12 @@ export function Navbar() {
     return "/dashboard"
   }
 
-  // Check if vendor has a premium plan
   const isPremiumVendor =
     role === "vendor" &&
     (user?.subscriptionPlan?.toLowerCase().includes("prem") ||
       user?.subscriptionPlan?.toLowerCase().includes("pro") ||
       Boolean((user as { isPremium?: boolean })?.isPremium))
 
-  // User initials for avatar fallback
   const userName = user?.name
   const userInitials = React.useMemo(() => {
     if (!userName) return "WP"
@@ -79,7 +77,6 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-md transition-all">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand Logo */}
         <Link
           href="/"
           className="group flex items-center gap-2 transition-transform active:scale-98"
@@ -92,7 +89,6 @@ export function Navbar() {
           </span>
         </Link>
 
-        {/* Desktop Navigation Links */}
         <nav className="hidden md:flex md:items-center md:gap-7">
           {navLinks.map((link) => {
             const isActive =
@@ -116,7 +112,6 @@ export function Navbar() {
           })}
         </nav>
 
-        {/* Desktop Auth Controls */}
         <div className="hidden md:flex md:items-center md:gap-3">
           {isPending ? (
             <div className="size-8 rounded-full bg-muted animate-pulse" />
@@ -139,7 +134,6 @@ export function Navbar() {
                     </AvatarFallback>
                   </Avatar>
 
-                  {/* Premium Vendor Crown Indicator */}
                   {isPremiumVendor && (
                     <span
                       title="Premium Vendor"
@@ -167,53 +161,54 @@ export function Navbar() {
                 align="end"
                 className="w-56 rounded-xl border-border/80 bg-popover p-1.5 shadow-lg"
               >
-                {/* User Identity Header */}
-                <DropdownMenuLabel className="px-2.5 py-2">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-serif font-semibold text-foreground truncate">
-                        {user.name}
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="px-2.5 py-2">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-serif font-semibold text-foreground truncate">
+                          {user.name}
+                        </span>
+                        {isPremiumVendor ? (
+                          <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-none text-[10px] px-1.5 py-0">
+                            Premium
+                          </Badge>
+                        ) : (
+                          role && (
+                            <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
+                              {role}
+                            </span>
+                          )
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {user.email}
                       </span>
-                      {isPremiumVendor ? (
-                        <Badge className="bg-amber-500/20 text-amber-700 dark:text-amber-300 border-none text-[10px] px-1.5 py-0">
-                          Premium
-                        </Badge>
-                      ) : (
-                        role && (
-                          <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium uppercase text-muted-foreground">
-                            {role}
-                          </span>
-                        )
-                      )}
                     </div>
-                    <span className="text-xs text-muted-foreground truncate">
-                      {user.email}
-                    </span>
-                  </div>
-                </DropdownMenuLabel>
+                  </DropdownMenuLabel>
+                </DropdownMenuGroup>
 
                 <DropdownMenuSeparator />
 
-                {/* Dashboard Link */}
-                <DropdownMenuItem
-                  onClick={() => router.push(getDashboardHref())}
-                  className="cursor-pointer gap-2.5 px-2.5 py-2 text-sm text-foreground focus:bg-primary/10 focus:text-primary rounded-md"
-                >
-                  <LayoutDashboard className="size-4 text-primary" />
-                  <span>Dashboard</span>
-                </DropdownMenuItem>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem
+                    onClick={() => router.push(getDashboardHref())}
+                    className="cursor-pointer gap-2.5 px-2.5 py-2 text-sm text-foreground focus:bg-primary/10 focus:text-primary rounded-md"
+                  >
+                    <LayoutDashboard className="size-4 text-primary" />
+                    <span>Dashboard</span>
+                  </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  onClick={() => router.push("/profile")}
-                  className="cursor-pointer gap-2.5 px-2.5 py-2 text-sm text-foreground focus:bg-primary/10 focus:text-primary rounded-md"
-                >
-                  <UserIcon className="size-4 text-muted-foreground" />
-                  <span>Profile Settings</span>
-                </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => router.push("/profile")}
+                    className="cursor-pointer gap-2.5 px-2.5 py-2 text-sm text-foreground focus:bg-primary/10 focus:text-primary rounded-md"
+                  >
+                    <UserIcon className="size-4 text-muted-foreground" />
+                    <span>Profile Settings</span>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
 
                 <DropdownMenuSeparator />
 
-                {/* Logout Option */}
                 <DropdownMenuItem
                   onClick={handleLogout}
                   variant="destructive"
@@ -241,7 +236,6 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Mobile Hamburger Sheet Trigger */}
         <div className="flex items-center gap-2 md:hidden">
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger
@@ -273,7 +267,6 @@ export function Navbar() {
                   </SheetTitle>
                 </SheetHeader>
 
-                {/* Mobile Logged-in Profile Banner */}
                 {isAuthenticated && user && (
                   <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-card p-3 shadow-2xs">
                     <Avatar className="size-10">
@@ -303,7 +296,6 @@ export function Navbar() {
                   </div>
                 )}
 
-                {/* Mobile Navigation Links */}
                 <div className="flex flex-col gap-1.5">
                   <p className="px-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Menu
@@ -364,7 +356,6 @@ export function Navbar() {
                 </div>
               </div>
 
-              {/* Mobile Auth Actions Footer */}
               <div className="pt-6 border-t border-border/60">
                 {isAuthenticated ? (
                   <Button

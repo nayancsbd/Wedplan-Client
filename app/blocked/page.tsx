@@ -8,7 +8,6 @@ import { clearTokenCache } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 
 export default function BlockedPage() {
-  // Sign user out and clear token cache immediately upon landing
   React.useEffect(() => {
     clearTokenCache()
     authClient.signOut().catch(() => {})

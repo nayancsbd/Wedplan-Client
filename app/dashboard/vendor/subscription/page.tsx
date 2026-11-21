@@ -22,6 +22,8 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DataTable, type DataTableColumn } from "@/components/dashboard/DataTable"
 import { StatusBadge } from "@/components/shared/StatusBadge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { EmptyState } from "@/components/shared/EmptyState"
 import { useAuth } from "@/hooks/use-auth"
 
 interface SubscriptionData {
@@ -569,15 +571,111 @@ export default function VendorSubscriptionPage() {
           </div>
         </div>
 
-        <DataTable
-          columns={columns}
-          data={transactions}
-          isLoading={isLoading}
-          emptyState={{
-            title: "No transactions recorded",
-            description: "When you upgrade or pay for subscriptions, invoices and transaction records will appear here.",
-          }}
-        />
+        <div className="hidden lg:block">
+          <DataTable
+            columns={columns}
+            data={transactions}
+            isLoading={isLoading}
+            emptyState={{
+              title: "No transactions recorded",
+              description: "When you upgrade or pay for subscriptions, invoices and transaction records will appear here.",
+            }}
+          />
+        </div>
+
+        <div className="lg:hidden space-y-4">
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={n}
+                  className="rounded-2xl border border-border/80 bg-card p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </div>
+                  <Skeleton className="h-4 w-48" />
+                  <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : transactions.length === 0 ? (
+            <EmptyState
+              icon={Receipt}
+              title="No transactions recorded"
+              description="When you upgrade or pay for subscriptions, invoices and transaction records will appear here."
+            />
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {transactions.map((item) => {
+                const amt = item.amount >= 100 && item.amount % 1 === 0 ? item.amount / 100 : item.amount
+                const d = item.createdAt ? new Date(item.createdAt) : null
+                const dateStr = d && !isNaN(d.getTime())
+                  ? d.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : item.createdAt || "—"
+
+                return (
+                  <div
+                    key={item.id}
+                    className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between gap-3 shadow-xs"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <Receipt className="size-4 text-muted-foreground shrink-0" />
+                          <span className="font-mono text-xs text-foreground font-semibold truncate">
+                            {item.id.length > 18 ? `${item.id.slice(0, 15)}...` : item.id}
+                          </span>
+                        </div>
+                        <StatusBadge status={item.status || "completed"} />
+                      </div>
+
+                      <div className="pt-1">
+                        <p className="font-medium text-foreground text-sm">
+                          {item.description || "Premium Membership"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Stripe Test Checkout</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-border/60 text-xs">
+                      <span className="font-bold text-foreground text-sm">
+                        ${amt.toFixed(2)} {item.currency || "USD"}
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Calendar className="size-3 text-primary shrink-0" />
+                          <span>{dateStr}</span>
+                        </div>
+
+                        {item.receiptUrl && (
+                          <a
+                            href={item.receiptUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-primary hover:underline text-xs font-medium"
+                          >
+                            <span>Receipt</span>
+                            <ExternalLink className="size-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

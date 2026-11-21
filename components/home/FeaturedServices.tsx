@@ -87,14 +87,13 @@ export function FeaturedServices() {
   }
 
   return (
-    <section className="py-16 sm:py-24 bg-card/40 border-y border-border/60">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
-        {/* Section Header */}
+    <section className="py-12 sm:py-20 lg:py-24 bg-card/40 border-y border-border/60">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-10 sm:space-y-12">
         <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
           whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.55 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         >
           <SectionHeading
             badge="Handpicked Excellence"
@@ -103,7 +102,6 @@ export function FeaturedServices() {
           />
         </motion.div>
 
-        {/* Content Grid / States */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -129,9 +127,9 @@ export function FeaturedServices() {
             <p className="text-sm text-muted-foreground">
               Unable to load featured services right now.
             </p>
-            <Button variant="outline" size="sm" onClick={handleRetry} className="cursor-pointer">
-              <RefreshCw className="size-4 mr-2" />
-              Try Again
+            <Button variant="outline" size="sm" onClick={handleRetry} className="cursor-pointer gap-2">
+              <RefreshCw className="size-3.5" />
+              <span>Try Again</span>
             </Button>
           </div>
         ) : services.length === 0 ? (
@@ -149,12 +147,13 @@ export function FeaturedServices() {
             {services.map((item, index) => (
               <motion.div
                 key={item.id || index}
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 14 }}
                 whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, margin: "-30px" }}
                 transition={{
-                  duration: 0.5,
-                  delay: shouldReduceMotion ? 0 : index * 0.08,
+                  duration: 0.35,
+                  delay: shouldReduceMotion ? 0 : index * 0.05,
+                  ease: [0.22, 1, 0.36, 1],
                 }}
               >
                 <ServiceCard
@@ -175,8 +174,7 @@ export function FeaturedServices() {
           </div>
         )}
 
-        {/* View All CTA */}
-        <div className="text-center pt-4">
+        <div className="text-center pt-2">
           <Link href="/services">
             <Button
               variant="outline"

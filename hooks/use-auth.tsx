@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
 import { clearTokenCache } from "@/lib/api"
 import type { User, UserRole } from "@/types"
@@ -32,6 +33,7 @@ export interface AuthContextValue {
 const AuthContext = React.createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   const { data: sessionData, isPending, refetch } = authClient.useSession()
 
   const user = (sessionData?.user as unknown as AuthUser) || null
@@ -41,12 +43,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleSignOut = React.useCallback(async () => {
     clearTokenCache()
     await authClient.signOut()
-    if (typeof window !== "undefined") {
-      // Hard redirect to clear all auth state
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.href = `${window.location.origin}/signin`
-    }
-  }, [])
+    router.push("/signin")
+    router.refresh()
+  }, [router])
 
   const value = React.useMemo<AuthContextValue>(
     () => ({

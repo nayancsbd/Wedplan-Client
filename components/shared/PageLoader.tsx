@@ -26,7 +26,6 @@ export function PageLoader({
       )}
     >
       <div className="relative flex items-center justify-center">
-        {/* Soft pulsing outer glow ring */}
         <motion.div
           animate={{
             scale: [1, 1.25, 1],
@@ -40,7 +39,6 @@ export function PageLoader({
           className="size-16 rounded-full bg-primary/15 blur-sm"
         />
 
-        {/* Outer rotating ring */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{
@@ -51,7 +49,6 @@ export function PageLoader({
           className="absolute size-14 rounded-full border-2 border-primary/25 border-t-primary border-r-primary/60"
         />
 
-        {/* Center elegant heart icon */}
         <motion.div
           animate={{ scale: [0.9, 1.12, 0.9] }}
           transition={{

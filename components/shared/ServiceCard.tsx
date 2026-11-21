@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Star, MapPin, Heart } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -45,18 +46,18 @@ export function ServiceCard({
   const cardBody = (
     <Card
       className={cn(
-        "group overflow-hidden rounded-2xl border-border/80 bg-card transition-all duration-300 hover:shadow-lg hover:border-primary/40",
+        "group overflow-hidden rounded-2xl border-border/80 bg-card transition-all duration-300 hover:shadow-lg hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden",
         className
       )}
     >
-      {/* Image Preview / Placeholder */}
       <div className="relative aspect-4/3 w-full overflow-hidden bg-muted">
         {imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={imageUrl}
             alt={title}
-            className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex size-full items-center justify-center bg-linear-to-br from-primary/15 via-muted to-secondary text-primary/40">
@@ -64,16 +65,14 @@ export function ServiceCard({
           </div>
         )}
 
-        {/* Featured Tag */}
         {featured && (
-          <div className="absolute top-3 left-3">
+          <div className="absolute top-3 left-3 z-10">
             <Badge className="bg-primary text-primary-foreground border-none font-medium text-xs shadow-xs">
               Featured
             </Badge>
           </div>
         )}
 
-        {/* Favorite Heart Button */}
         {onFavorite && (
           <Button
             type="button"
@@ -84,7 +83,7 @@ export function ServiceCard({
               e.stopPropagation()
               onFavorite()
             }}
-            className="absolute top-3 right-3 size-8 rounded-full bg-background/80 backdrop-blur-md text-foreground hover:bg-background hover:text-primary transition-colors"
+            className="absolute top-3 right-3 z-10 size-8 rounded-full bg-background/80 backdrop-blur-md text-foreground hover:bg-background hover:text-primary transition-colors cursor-pointer"
             aria-label="Add to favorites"
           >
             <Heart
@@ -98,8 +97,7 @@ export function ServiceCard({
           </Button>
         )}
 
-        {/* Category Pill */}
-        <div className="absolute bottom-3 left-3">
+        <div className="absolute bottom-3 left-3 z-10">
           <span className="rounded-full bg-background/90 backdrop-blur-md px-2.5 py-0.5 text-xs font-medium text-foreground uppercase tracking-wide">
             {category}
           </span>
@@ -165,7 +163,7 @@ export function ServiceCard({
 
   if (href) {
     return (
-      <Link href={href} className="block no-underline">
+      <Link href={href} className="block no-underline focus-visible:outline-hidden">
         {cardBody}
       </Link>
     )

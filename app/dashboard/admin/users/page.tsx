@@ -351,7 +351,7 @@ export default function AdminUsersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
+          <div className="hidden lg:block overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="bg-muted/40 border-b border-border/80 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -510,6 +510,144 @@ export default function AdminUsersPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+            {paginatedUsers.map((item) => {
+              const isAdmin = item.role === "admin"
+              const isActing = actingUserId === item.id
+
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 shadow-xs"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <Avatar className="size-11 border border-border/60 shrink-0">
+                          <AvatarImage src={item.image || ""} alt={item.name} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                            {item.name.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground text-sm flex items-center gap-1.5 truncate">
+                            <span className="truncate">{item.name}</span>
+                            {isAdmin && (
+                              <Shield className="size-3 text-primary shrink-0" />
+                            )}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">{item.email}</p>
+                        </div>
+                      </div>
+
+                      <StatusBadge
+                        status={item.isBlocked ? "blocked" : "active"}
+                        label={item.isBlocked ? "Blocked" : "Active"}
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/60 text-xs">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
+                          isAdmin
+                            ? "bg-primary/10 text-primary border border-primary/20"
+                            : item.role === "vendor"
+                            ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {item.role || "customer"}
+                      </span>
+
+                      {item.businessName ? (
+                        <span className="font-medium text-foreground text-xs truncate max-w-[150px]">
+                          {item.businessName}
+                        </span>
+                      ) : item.subscriptionPlan ? (
+                        <span className="text-xs text-muted-foreground capitalize">
+                          {item.subscriptionPlan} Plan
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Registered {formatDisplayDate(item.createdAt)}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/60">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedUser(item)}
+                      className="flex-1 sm:flex-initial h-8 gap-1 text-xs cursor-pointer"
+                    >
+                      <Eye className="size-3.5" />
+                      <span>Details</span>
+                    </Button>
+
+                    {isAdmin ? (
+                      <span className="text-[11px] text-muted-foreground/70 italic px-2">
+                        Admin Protected
+                      </span>
+                    ) : (
+                      <AlertDialog>
+                        <AlertDialogTrigger
+                          render={
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={isActing}
+                              className={`flex-1 sm:flex-initial h-8 text-xs cursor-pointer ${
+                                item.isBlocked
+                                  ? "text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 border-emerald-500/30"
+                                  : "text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                              }`}
+                            />
+                          }
+                        >
+                          {isActing ? (
+                            <Loader2 className="size-3.5 animate-spin mr-1" />
+                          ) : item.isBlocked ? (
+                            <ShieldCheck className="size-3.5 mr-1" />
+                          ) : (
+                            <ShieldAlert className="size-3.5 mr-1" />
+                          )}
+                          <span>{item.isBlocked ? "Unblock" : "Block"}</span>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              {item.isBlocked ? "Unblock User Account?" : "Block User Account?"}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {item.isBlocked
+                                ? `Restore full platform access for ${item.name} (${item.email})?`
+                                : `Restrict ${item.name} (${item.email}) from logging in and accessing wedding services?`}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleToggleBlock(item)}
+                              className={
+                                item.isBlocked
+                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                  : "bg-destructive hover:bg-destructive/90 text-white"
+                              }
+                            >
+                              {item.isBlocked ? "Yes, Unblock Account" : "Yes, Block Account"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">

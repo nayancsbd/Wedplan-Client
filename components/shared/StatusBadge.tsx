@@ -45,7 +45,6 @@ function getStatusConfig(status: string): StatusConfig {
   const normalized = (status || "").toLowerCase().trim().replace(/[- ]/g, "_")
 
   switch (normalized) {
-    // Green / Positive States
     case "active":
     case "approved":
     case "confirmed":
@@ -59,7 +58,6 @@ function getStatusConfig(status: string): StatusConfig {
         dotClass: "bg-emerald-500",
       }
 
-    // Amber / Pending States
     case "pending":
     case "in_progress":
     case "processing":
@@ -72,7 +70,6 @@ function getStatusConfig(status: string): StatusConfig {
         dotClass: "bg-amber-500",
       }
 
-    // Red / Destructive States
     case "cancelled":
     case "canceled":
     case "rejected":
@@ -92,7 +89,6 @@ function getStatusConfig(status: string): StatusConfig {
         dotClass: "bg-rose-500",
       }
 
-    // Primary / Premium States
     case "premium":
     case "featured":
       return {
@@ -102,7 +98,6 @@ function getStatusConfig(status: string): StatusConfig {
         dotClass: "bg-primary",
       }
 
-    // Neutral / Muted States
     case "inactive":
     case "draft":
     case "refunded":

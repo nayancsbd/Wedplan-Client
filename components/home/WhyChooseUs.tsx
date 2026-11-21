@@ -64,10 +64,10 @@ export function WhyChooseUs() {
     <section className="py-16 sm:py-24 bg-card/40 border-t border-border/60">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
         <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
           whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.55 }}
+          transition={{ duration: 0.4 }}
         >
           <SectionHeading
             badge="The WedPlan Advantage"
@@ -82,14 +82,14 @@ export function WhyChooseUs() {
             return (
               <motion.div
                 key={item.title}
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
                 whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{
-                  duration: 0.5,
-                  delay: shouldReduceMotion ? 0 : index * 0.08,
+                  duration: 0.35,
+                  delay: shouldReduceMotion ? 0 : index * 0.05,
                 }}
-                className="flex flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/40"
+                className="flex flex-col rounded-2xl border border-border/80 bg-card p-6 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5"
               >
                 <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-4 shadow-2xs">
                   <Icon className="size-6 stroke-[1.8]" />

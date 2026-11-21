@@ -301,69 +301,118 @@ export default function AdminTransactionsPage() {
           )}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-muted/40 border-b border-border/80 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="py-3.5 pl-6 pr-4">Transaction ID</th>
-                  <th className="px-4 py-3.5">Vendor</th>
-                  <th className="px-4 py-3.5">Plan / Description</th>
-                  <th className="px-4 py-3.5">Amount</th>
-                  <th className="px-4 py-3.5">Status</th>
-                  <th className="py-3.5 pl-4 pr-6 text-right">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
-                {filteredTransactions.map((item) => (
-                  <tr key={item.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="py-4 pl-6 pr-4">
-                      <div className="flex items-center gap-2">
-                        <Receipt className="size-4 text-muted-foreground shrink-0" />
-                        <span className="font-mono text-xs text-foreground font-semibold">
-                          {item.id.length > 20 ? `${item.id.slice(0, 16)}...` : item.id}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <div>
-                        <p className="font-medium text-foreground text-xs flex items-center gap-1.5">
-                          <Store className="size-3 text-primary shrink-0" />
-                          <span>{item.vendorName}</span>
-                        </p>
-                        {item.vendorEmail && (
-                          <p className="text-[11px] text-muted-foreground mt-0.5">{item.vendorEmail}</p>
-                        )}
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <span className="font-medium text-foreground text-xs capitalize">
-                        {item.plan}
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <span className="font-bold text-foreground text-sm">
-                        ${item.amount.toFixed(2)} {item.currency || "USD"}
-                      </span>
-                    </td>
-
-                    <td className="px-4 py-4">
-                      <StatusBadge status={item.status} />
-                    </td>
-
-                    <td className="py-4 pl-4 pr-6 text-right">
-                      <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
-                        <Calendar className="size-3.5 text-primary shrink-0" />
-                        <span>{formatDisplayDate(item.createdAt)}</span>
-                      </div>
-                    </td>
+        <div className="space-y-4">
+          <div className="hidden lg:block overflow-hidden rounded-2xl border border-border/80 bg-card shadow-xs">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-muted/40 border-b border-border/80 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="py-3.5 pl-6 pr-4">Transaction ID</th>
+                    <th className="px-4 py-3.5">Vendor</th>
+                    <th className="px-4 py-3.5">Plan / Description</th>
+                    <th className="px-4 py-3.5">Amount</th>
+                    <th className="px-4 py-3.5">Status</th>
+                    <th className="py-3.5 pl-4 pr-6 text-right">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {filteredTransactions.map((item) => (
+                    <tr key={item.id} className="hover:bg-muted/20 transition-colors">
+                      <td className="py-4 pl-6 pr-4">
+                        <div className="flex items-center gap-2">
+                          <Receipt className="size-4 text-muted-foreground shrink-0" />
+                          <span className="font-mono text-xs text-foreground font-semibold">
+                            {item.id.length > 20 ? `${item.id.slice(0, 16)}...` : item.id}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <div>
+                          <p className="font-medium text-foreground text-xs flex items-center gap-1.5">
+                            <Store className="size-3 text-primary shrink-0" />
+                            <span>{item.vendorName}</span>
+                          </p>
+                          {item.vendorEmail && (
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{item.vendorEmail}</p>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span className="font-medium text-foreground text-xs capitalize">
+                          {item.plan}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span className="font-bold text-foreground text-sm">
+                          ${item.amount.toFixed(2)} {item.currency || "USD"}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <StatusBadge status={item.status} />
+                      </td>
+
+                      <td className="py-4 pl-4 pr-6 text-right">
+                        <div className="flex items-center justify-end gap-1.5 text-xs text-muted-foreground">
+                          <Calendar className="size-3.5 text-primary shrink-0" />
+                          <span>{formatDisplayDate(item.createdAt)}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+            {filteredTransactions.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-2xl border border-border/80 bg-card p-4 sm:p-5 flex flex-col justify-between gap-3 shadow-xs"
+              >
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Receipt className="size-4 text-muted-foreground shrink-0" />
+                      <span className="font-mono text-xs text-foreground font-semibold truncate">
+                        {item.id.length > 18 ? `${item.id.slice(0, 15)}...` : item.id}
+                      </span>
+                    </div>
+                    <StatusBadge status={item.status} />
+                  </div>
+
+                  <div className="border-t border-border/60 pt-2 space-y-1">
+                    <p className="font-medium text-foreground text-xs flex items-center gap-1.5 truncate">
+                      <Store className="size-3 text-primary shrink-0" />
+                      <span className="truncate">{item.vendorName}</span>
+                    </p>
+                    {item.vendorEmail && (
+                      <p className="text-[11px] text-muted-foreground truncate pl-4.5">
+                        {item.vendorEmail}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground capitalize">{item.plan}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2 border-t border-border/60 text-xs">
+                  <span className="font-bold text-foreground text-sm">
+                    ${item.amount.toFixed(2)} {item.currency || "USD"}
+                  </span>
+                  <div className="flex items-center gap-1.5 text-muted-foreground">
+                    <Calendar className="size-3 text-primary shrink-0" />
+                    <span>{formatDisplayDate(item.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}

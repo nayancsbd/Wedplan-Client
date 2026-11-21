@@ -96,10 +96,10 @@ export function HowItWorks() {
     <section className="py-16 sm:py-24 bg-background">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
         <motion.div
-          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
           whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.55 }}
+          transition={{ duration: 0.4 }}
         >
           <SectionHeading
             badge="Effortless Journey"
@@ -108,14 +108,21 @@ export function HowItWorks() {
           />
         </motion.div>
 
-        {/* Audience Toggle Tabs */}
         <div className="flex justify-center">
-          <div className="inline-flex rounded-full border border-border bg-card p-1 shadow-xs">
+          <div
+            role="tablist"
+            aria-label="How WedPlan works audience selector"
+            className="inline-flex rounded-full border border-border bg-card p-1 shadow-xs"
+          >
             <button
+              id="tab-customers"
               type="button"
+              role="tab"
+              aria-selected={activeTab === "customers"}
+              aria-controls="panel-customers"
               onClick={() => setActiveTab("customers")}
               className={cn(
-                "rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer",
+                "rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden",
                 activeTab === "customers"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -124,10 +131,14 @@ export function HowItWorks() {
               For Couples
             </button>
             <button
+              id="tab-vendors"
               type="button"
+              role="tab"
+              aria-selected={activeTab === "vendors"}
+              aria-controls="panel-vendors"
               onClick={() => setActiveTab("vendors")}
               className={cn(
-                "rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer",
+                "rounded-full px-5 py-2 text-sm font-semibold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden",
                 activeTab === "vendors"
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -138,23 +149,26 @@ export function HowItWorks() {
           </div>
         </div>
 
-        {/* Steps Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
+        <div
+          id={activeTab === "customers" ? "panel-customers" : "panel-vendors"}
+          role="tabpanel"
+          aria-labelledby={activeTab === "customers" ? "tab-customers" : "tab-vendors"}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4"
+        >
           {steps.map((step, index) => {
             const Icon = step.icon
             return (
               <motion.div
                 key={step.number + activeTab}
-                initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
                 whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{
-                  duration: 0.5,
-                  delay: shouldReduceMotion ? 0 : index * 0.1,
+                  duration: 0.35,
+                  delay: shouldReduceMotion ? 0 : index * 0.05,
                 }}
-                className="relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/40"
+                className="relative flex flex-col justify-between rounded-2xl border border-border/80 bg-card p-6 shadow-xs transition-all duration-300 hover:shadow-md hover:border-primary/40 hover:-translate-y-0.5"
               >
-                {/* Step Number Top Badge */}
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-serif text-2xl font-bold text-primary/40">
                     {step.number}
