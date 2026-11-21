@@ -5,7 +5,11 @@ const apiUrl =
   process.env.NEXT_PUBLIC_API_URL ||
   "http://localhost:5001"
 
-const cleanApiUrl = apiUrl.replace(/\/api\/?$/, "").replace(/\/+$/, "")
+const cleanApiUrl = apiUrl
+  .trim()
+  .replace(/\/+$/, "")
+  .replace(/\/api\/health$/, "")
+  .replace(/\/api$/, "")
 
 const nextConfig: NextConfig = {
   images: {

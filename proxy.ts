@@ -12,7 +12,14 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/services/") && pathname !== "/services"
 
   if (isDashboard || isProfile || isPayment || isServicesSubroute) {
-    const sessionCookie = getSessionCookie(request)
+    const sessionCookie =
+      getSessionCookie(request) ||
+      request.cookies.get("better-auth.session_token")?.value ||
+      request.cookies.get("__Secure-better-auth.session_token")?.value ||
+      request.cookies.get("better-auth.session_data")?.value ||
+      request.cookies.get("__Secure-better-auth.session_data")?.value ||
+      request.cookies.get("wedplan_jwt_token")?.value
+
     if (!sessionCookie) {
       const callbackUrl = encodeURIComponent(`${pathname}${search}`)
       return NextResponse.redirect(
