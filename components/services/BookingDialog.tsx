@@ -97,7 +97,7 @@ export function BookingDialog({
         category: service.category,
         eventDate: values.eventDate,
         eventLocation: values.eventLocation.trim(),
-        message: values.message?.trim() || undefined,
+        message: values.message?.trim() || "",
         totalPrice: service.startingPrice,
       }
 
@@ -128,7 +128,6 @@ export function BookingDialog({
           "Duplicate Booking: You have already submitted a booking request for this service on this date."
         )
       } else if (
-        status === 422 ||
         msg.toLowerCase().includes("unavailable") ||
         msg.toLowerCase().includes("not available")
       ) {

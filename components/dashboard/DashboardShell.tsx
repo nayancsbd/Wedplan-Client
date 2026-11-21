@@ -96,16 +96,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }, [isPending, isAuthenticated, role, pathname])
 
   const navItems = React.useMemo(() => {
-    if (role === "admin" || pathname.startsWith("/dashboard/admin")) {
+    if (role === "admin") {
       return ADMIN_NAV_ITEMS
     }
-    if (role === "vendor" || pathname.startsWith("/dashboard/vendor")) {
+    if (role === "vendor") {
       return VENDOR_NAV_ITEMS
     }
     return CUSTOMER_NAV_ITEMS
-  }, [role, pathname])
+  }, [role])
 
   const currentSection = React.useMemo(() => {
+    if (isUnauthorizedRole) {
+      return "Access Restricted"
+    }
     const activeItem = navItems.find((item) => {
       if (item.href === "/dashboard/vendor" || item.href === "/dashboard/customer" || item.href === "/dashboard/admin") {
         return pathname === item.href
@@ -113,7 +116,40 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       return pathname.startsWith(item.href)
     })
     return activeItem?.title || "Dashboard"
-  }, [navItems, pathname])
+  }, [navItems, pathname, isUnauthorizedRole])
+
+  const userRoleDashboardHref =
+    role === "admin"
+      ? "/dashboard/admin"
+      : role === "vendor"
+      ? "/dashboard/vendor"
+      : "/dashboard/customer"
+
+  const userRoleDashboardLabel =
+    role === "admin"
+      ? "Go to Admin Dashboard"
+      : role === "vendor"
+      ? "Go to Vendor Dashboard"
+      : "Go to Customer Dashboard"
+
+  const userActionLinks = React.useMemo(() => {
+    if (role === "customer") {
+      return [
+        { label: "My Bookings", href: "/dashboard/customer/bookings" },
+        { label: "Profile Settings", href: "/dashboard/customer/profile" },
+      ]
+    }
+    if (role === "vendor") {
+      return [
+        { label: "My Services", href: "/dashboard/vendor/services" },
+        { label: "Booking Requests", href: "/dashboard/vendor/booking-requests" },
+      ]
+    }
+    return [
+      { label: "Manage Users", href: "/dashboard/admin/users" },
+      { label: "Manage Services", href: "/dashboard/admin/services" },
+    ]
+  }, [role])
 
   const handleLogout = async () => {
     try {
@@ -329,14 +365,25 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/">
+            <Link href={userRoleDashboardHref}>
               <Button
                 variant="outline"
                 size="sm"
-                className="hidden sm:inline-flex text-xs h-8 gap-1.5 border-border/80 cursor-pointer"
+                className="hidden sm:inline-flex text-xs h-8 gap-1.5 border-primary/30 text-primary hover:bg-primary/10 cursor-pointer font-serif"
+              >
+                <LayoutDashboard className="size-3.5" />
+                <span>{role === "admin" ? "Admin Dashboard" : role === "vendor" ? "Vendor Dashboard" : "Customer Dashboard"}</span>
+              </Button>
+            </Link>
+
+            <Link href="/">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:inline-flex text-xs h-8 gap-1.5 text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <Home className="size-3.5" />
-                <span>Visit Storefront</span>
+                <span>Storefront</span>
               </Button>
             </Link>
 
@@ -385,6 +432,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                     : "Customer"
                 } Portal. Your account is signed in as ${role || "another role"}.`}
                 showDashboardLink={true}
+                dashboardHref={userRoleDashboardHref}
+                dashboardLabel={userRoleDashboardLabel}
+                actionLinks={userActionLinks}
               />
             </div>
           ) : (

@@ -12,6 +12,9 @@ export interface AccessDeniedProps {
   onRetry?: () => void
   showDashboardLink?: boolean
   showHomeLink?: boolean
+  dashboardHref?: string
+  dashboardLabel?: string
+  actionLinks?: { label: string; href: string }[]
 }
 
 export function AccessDenied({
@@ -20,6 +23,9 @@ export function AccessDenied({
   onRetry,
   showDashboardLink = true,
   showHomeLink = true,
+  dashboardHref = "/dashboard",
+  dashboardLabel = "Go to Dashboard",
+  actionLinks = [],
 }: AccessDeniedProps) {
   return (
     <div className="flex min-h-[50vh] items-center justify-center p-4 sm:p-8">
@@ -40,7 +46,7 @@ export function AccessDenied({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
           {onRetry && (
             <Button onClick={onRetry} size="sm" className="h-9 gap-1.5 text-xs shadow-xs cursor-pointer">
               <span>Try Again</span>
@@ -49,17 +55,31 @@ export function AccessDenied({
 
           {showDashboardLink && (
             <Link
-              href="/dashboard"
+              href={dashboardHref}
               className={buttonVariants({
                 variant: "default",
                 size: "sm",
-                className: "h-9 gap-1.5 text-xs shadow-xs cursor-pointer",
+                className: "h-9 gap-1.5 text-xs shadow-xs cursor-pointer font-serif",
               })}
             >
               <LayoutDashboard className="size-3.5" />
-              <span>Go to Dashboard</span>
+              <span>{dashboardLabel}</span>
             </Link>
           )}
+
+          {actionLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={buttonVariants({
+                variant: "outline",
+                size: "sm",
+                className: "h-9 gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/10 cursor-pointer font-serif",
+              })}
+            >
+              <span>{link.label}</span>
+            </Link>
+          ))}
 
           <Link
             href="/services"

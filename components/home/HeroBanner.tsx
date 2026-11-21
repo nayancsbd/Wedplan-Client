@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { motion, useReducedMotion } from "motion/react"
 import {
   Heart,
@@ -9,7 +10,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Star,
-  Users,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -144,44 +144,24 @@ export function HeroBanner() {
             transition={{ duration: 0.45, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
             className="relative lg:col-span-5 flex items-center justify-center"
           >
-            <div className="relative w-full max-w-md aspect-4/5 rounded-3xl border border-primary/20 bg-linear-to-b from-card via-card to-background p-3 shadow-xl ring-1 ring-black/5">
-              <div className="relative size-full overflow-hidden rounded-2xl bg-linear-to-tr from-primary/15 via-muted/60 to-secondary/80 flex flex-col justify-between p-5 sm:p-6">
-                <div className="flex items-center justify-between">
+            <div className="relative w-full max-w-md aspect-3/4 sm:aspect-4/5 rounded-3xl border border-primary/20 bg-linear-to-b from-card via-card to-background p-3 shadow-xl ring-1 ring-black/5">
+              <div className="relative size-full overflow-hidden rounded-2xl">
+                <Image
+                  src="/hero-wedding.jpg"
+                  alt="WedPlan Wedding Couple Celebration"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 45vw, 480px"
+                  className="object-cover object-top transition-transform duration-700 hover:scale-105"
+                />
+
+                <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur-md px-3 py-1 text-xs font-medium text-foreground shadow-xs">
                     <ShieldCheck className="size-3.5 text-emerald-600" />
                     Verified Vendors
                   </span>
-                  <div className="flex size-9 items-center justify-center rounded-full bg-background/80 text-primary">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-background/85 text-primary shadow-xs">
                     <Heart className="size-4 fill-primary" />
-                  </div>
-                </div>
-
-                <div className="my-auto flex flex-col items-center text-center space-y-3 py-4">
-                  <div className="flex size-18 sm:size-20 items-center justify-center rounded-full bg-primary/10 text-primary ring-8 ring-primary/5 shadow-inner">
-                    <Sparkles className="size-9 sm:size-10 stroke-[1.6]" />
-                  </div>
-                  <h3 className="font-serif text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-                    Your Dream Wedding
-                  </h3>
-                  <p className="text-xs text-muted-foreground max-w-[220px]">
-                    Curated vendors, guaranteed milestone payments, and effortless coordination.
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-border/80 bg-background/95 backdrop-blur-md p-3 sm:p-3.5 shadow-sm space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-foreground">Curated Packages</span>
-                    <span className="font-semibold text-primary">Available Now</span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                    <div className="h-full w-4/5 rounded-full bg-primary" />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Users className="size-3" />
-                      10,000+ Couples Planned
-                    </span>
-                    <span>100% Protected</span>
                   </div>
                 </div>
               </div>

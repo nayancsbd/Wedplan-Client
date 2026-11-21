@@ -1,110 +1,125 @@
-# WedPlan - A Wedding Planning Platform
+# WedPlan - A Wedding Planning Platform 
 
-WedPlan is a full-featured, role-based wedding planning platform inspired by The Knot and Zola. It connects couples planning their special day with verified wedding service vendors across photography, venues, catering, floral design, styling, and bridal fashion, overseen by an administrative moderation dashboard.
+WedPlan is a full-featured, role-based wedding planning web application inspired by The Knot and Zola. It connects couples planning their wedding with verified vendors across photography, venues, catering, decoration and floral styling, makeup artistry, and bridal fashion, overseen by a centralized administrative moderation system.
 
 ---
 
-## Important Features
+## Repositories
+- **Live Demo**: [https://wedplan.nayanc.dev](https://wedplan.nayanc.dev/)
+- **Client Repository**: [https://github.com/nayancsbd/Wedplan-Client](https://github.com/nayancsbd/Wedplan-Client)
+- **Server Repository**: [https://github.com/nayancsbd/Wedplan-Server](https://github.com/nayancsbd/Wedplan-Server)
 
-### Role-Based Portals & Authentication
-- Three dedicated roles: **Customer**, **Vendor**, and **Admin**.
-- Secure authentication powered by Better Auth with session cookies and JWT Bearer token fallback.
-- Client-side token cache with automatic single-flight 401 refresh queue and seamless redirect to sign-in on expiration.
-- Google OAuth 2.0 social login alongside email/password credentials.
+---
 
-### Public Directory & Advanced Service Search
-- Search bar with debounced 350ms input, synchronized with browser URL parameters.
-- Combined multi-criteria filtering: keyword search, category selector, location selector, and sorting.
-- Price sorting: **Price: Low to High** (`price_asc`), **Price: High to Low** (`price_desc`), **Newest Listings** (`newest`), and **Highest Rated** (`rating`).
-- Active filter badges with one-click individual dismissal and a "Clear all filters" CTA.
-- Responsive service cards featuring cover images, price range, location badges, vendor badges, and rating stars.
-- Dedicated service detail pages (`/services/[id]`) with image galleries, inclusions list, vendor profile, and interactive booking modal.
+## Core Features
 
-### Customer Dashboard
-- **Overview**: Real-time KPI statistics for Total Booking Requests, Pending Inquiries, Accepted Bookings, and Rejected Bookings.
-- **My Bookings**: Filterable list with service thumbnail, vendor details, scheduled event date, event location, status badge, and request timestamp.
-- **Booking Actions**: View details dialog with complete message thread and cancellation confirmation dialog (available for pending bookings).
-- **Profile Settings**: Edit full name, profile image (ImgBB upload), phone number, and personal bio.
+### 1. Role-Based Portals & Authentication
+- **Three Distinct Roles**: Dedicated access models for Customer, Vendor, and Admin users.
+- **Authentication**: Powered by Better Auth with session cookies and JWT Bearer token fallback.
+- **Google OAuth 2.0 & Credentials**: Seamless one-click Google login alongside traditional email and password authentication.
+- **Automatic Token Refresh**: Client-side authentication client with single-flight 401 refresh queue and automated redirects to sign-in on session expiration.
+- **Role-Adaptive Navigation**: Navbar dynamically renders direct dashboard action buttons (`Customer Dashboard`, `Vendor Dashboard`, or `Admin Dashboard`) based on the authenticated session.
 
-### Vendor Workspace
+### 2. Public Marketplace & Advanced Service Search
+- **Search with Debounce**: Real-time keyword search bar debounced at 350ms and synchronized with browser URL parameters.
+- **Multi-Criteria Filtering**: Filter listings simultaneously by search keywords, wedding service category, location, and sorting criteria.
+- **Dynamic Sorting Options**:
+  - Price: Low to High (`price_asc`)
+  - Price: High to Low (`price_desc`)
+  - Newest Listings (`newest`)
+  - Highest Rated (`rating`)
+- **Active Filter Chips**: Interactive filter chips with one-click individual dismissal and a global "Clear all filters" control.
+- **Detailed Service Pages (`/services/[id]`)**: Full-width hero gallery, structured service inclusions, vendor profile card, interactive booking modal, and customer reviews.
+- **Curated Category Directory**: Visual cards for the 6 core dimensions of wedding planning with interactive zoom transitions and direct filter links.
+- **Success Stories (`/success-stories`)**: Showcase of real couple celebrations with wedding testimonials, vendor highlights, and photo galleries.
+
+### 3. Customer Dashboard (`/dashboard/customer`)
+- **Overview Dashboard**: Real-time KPI statistics tracking Total Requests, Pending Inquiries, Confirmed Bookings, and Cancelled/Rejected Bookings.
+- **My Bookings (`/dashboard/customer/bookings`)**: Comprehensive booking tracker with vendor details, event date, venue location, price, and current status badges (`pending`, `accepted`, `rejected`, `cancelled`).
+- **Interactive Booking Actions**: Modal dialog to inspect full booking details and an atomic confirmation dialog to cancel pending requests.
+- **Profile Settings (`/dashboard/customer/profile`)**: Manage personal details, phone number, bio, and upload custom avatars via ImgBB.
+
+### 4. Vendor Workspace (`/dashboard/vendor`)
 - **Package Builder (`/dashboard/vendor/services/new`)**:
-  - Multi-image upload to ImgBB (up to 5 photos).
-  - Pre-upload and post-upload deduplication preventing repeated images.
-  - Image preview controls: **Fill** (`object-cover`) vs. **Fit Whole Photo** (`object-contain`) for non-4:3 and cropped images.
-  - Full-resolution photo inspection modal dialog.
-  - Category mapping adhering to the server enum.
-  - Client-side and server-side validation enforcing listing limits.
-- **Service Listings Manager**:
-  - Live marketplace availability toggle (**Active** vs. **Paused**) without page reload.
-  - In-place service package editing dialog.
-  - Delete package confirmation dialog with active booking checks.
-- **Booking Requests**:
-  - Review incoming customer inquiries with event details and customized messages.
-  - Accept or reject requests with immediate status badge updates.
+  - Multi-image upload to ImgBB (up to 5 photos per service package).
+  - Pre-upload and post-upload image deduplication.
+  - Image aspect ratio preview switcher (`Fill` vs. `Fit Whole Photo`).
+  - Fullscreen photo inspection modal.
+  - Category selector adhering to platform standards.
+  - Inclusions tag builder and custom pricing input.
+- **Listing Limit & Tier Enforcement**:
+  - Free tier vendors are limited to a maximum of 3 active listings.
+  - Automated prompts to upgrade to Featured Pro when listing limits are reached.
+- **Service Listings Manager (`/dashboard/vendor/services`)**:
+  - Instant live availability toggle (`Active` vs. `Paused`) without full page reloads.
+  - In-place package editor dialog.
+  - Deletion confirmation dialog protected by active booking checks.
+- **Booking Requests (`/dashboard/vendor/booking-requests`)**:
+  - Real-time inquiry feed with customer contact info, event date, and custom notes.
+  - One-click Accept and Reject controls with status updates.
 - **Subscription Management (`/dashboard/vendor/subscription`)**:
-  - Comparison of Free (up to 3 active listings) vs. Featured Pro Premium (unlimited listings, priority directory placement).
-  - Stripe Checkout session integration with redirect.
-  - Polled verification flow on `/payment/success` confirming database activation.
-  - Cancel and retry flow on `/payment/cancel`.
-  - Vendor transaction history log.
+  - Comparison of Free plan vs. Featured Pro plan (unlimited listings and priority directory ranking).
+  - Stripe Checkout session integration with automatic checkout redirects.
+  - Verification polling on `/payment/success` ensuring database plan activation.
+  - Cancel and recovery handler on `/payment/cancel`.
+  - Vendor transaction history ledger.
 
-### Admin Moderation Panel
-- **Overview Metrics**: Total registered users, vendors, customers, total services, pending service approvals, and platform transactions.
-- **Manage Users**: Searchable table with role filtering, pagination, user details modal, and Block/Unblock actions (admins protected).
-- **Service Moderation**: Filter by status and category; Approve, Reject, or Delete listings with pending services highlighted.
-- **Transaction Logs**: Read-only financial ledger displaying vendor info, subscription plan, amount, currency, status, and creation date.
+### 5. Admin Moderation Suite (`/dashboard/admin`)
+- **System Overview**: Platform-wide metrics showing total registered users, customer count, vendor count, approved services, pending review queue, and revenue.
+- **User Management (`/dashboard/admin/users`)**: Searchable user table with role filters, pagination, user details modal, and instant Block/Unblock actions (admins are protected from self-blocking).
+- **Service Moderation (`/dashboard/admin/services`)**: Dedicated moderation tabs (`Pending Review`, `Approved`, `Rejected`) with one-click Approve, Reject, and Delete actions.
+- **Transaction Audit Log (`/dashboard/admin/transactions`)**: Read-only financial ledger displaying vendor profile, subscription plan, amount, currency, payment status, and timestamp.
+- **Admin Profile (`/dashboard/admin/profile`)**: Update administrative profile information.
 
-### Design & User Experience
-- Elegant wedding palette: soft ivory and blush backgrounds, rose-gold accents, deep charcoal typography.
-- Typography: Playfair Display serif headings paired with Inter sans-serif body.
-- Subtle Framer Motion page entrance transitions and staggered cards.
-- Toast notifications via Sonner across all user feedback channels (zero browser `alert()` calls).
-- Responsive layout across mobile (360px), tablet (768px), and desktop (1280px+).
-- Custom 404 Not Found page, 403 Access Denied view, and global error boundaries.
+### 6. Design & User Experience
+- **Theme Palette**: Soft ivory and blush backgrounds, dusty-rose/rose-gold primary accents, and deep charcoal body text.
+- **Typography**: Playfair Display serif headings paired with Inter clean sans-serif body text.
+- **Animations**: Fluid Framer Motion entrance effects, layout transitions, and hover states.
+- **Toast Notifications**: Comprehensive user feedback via Sonner with zero browser `alert()` popups.
+- **Responsive Layout**: Designed for mobile screens (360px+), tablets (768px+), and high-resolution desktops (1440px+).
+- **Error Handling**: Custom 404 page, role-based 403 Access Denied view with redirection buttons, and global React error boundaries.
 
 ---
 
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router, React 19, TypeScript)
-- **Styling**: Tailwind CSS, ShadCN UI, Radix UI primitives
+- **Styling**: Tailwind CSS, ShadCN UI, Radix UI
 - **Animations**: Framer Motion (`motion`)
-- **Form Management**: React Hook Form + Zod validation resolvers
-- **Authentication**: Better Auth with JWT plugin
+- **Forms & Validation**: React Hook Form, Zod
+- **Authentication**: Better Auth (Session Cookies + JWT Plugin)
 - **Payments**: Stripe Checkout (Test Mode)
-- **Image Uploads**: ImgBB API
+- **Image Hosting**: ImgBB API via secure proxy
 - **Icons**: Lucide React
 - **Notifications**: Sonner
 
 ---
 
-## Repository Links & Live Application
-
-- **Client Repository**: [https://github.com/nayancsbd/wedplan-client](https://github.com/nayancsbd/wedplan-client)
-- **Server Repository**: [https://github.com/nayancsbd/wedplan-server](https://github.com/nayancsbd/wedplan-server)
-
----
-
 ## Environment Variables
 
-The client requires the following environment variables configured in `.env.local` for development or in Vercel Project Settings for production:
+Configure the following environment variables in `.env` or `.env.local` for development and in your Vercel Project Settings for production:
 
+| Variable | Required | Description | Example |
+| :--- | :--- | :--- | :--- |
+| `NEXT_PUBLIC_APP_URL` | Yes | Canonical URL of the frontend application. | `http://localhost:3000` |
+| `API_URL` | Yes | Backend server URL used by Next.js server-side proxy rewrites. | `http://localhost:5001` |
+| `NEXT_PUBLIC_API_URL` | Yes | Public API URL accessible from the client browser. | `http://localhost:5001/api` |
 
-The repository contains a committed `.env.example` file. All sensitive `.env` files are ignored by git.
+The repository contains a committed `.env.example` file. All `.env` and `.env.local` files containing real secrets are strictly ignored by Git.
 
 ---
 
 ## Installation & Local Development
 
 ### 1. Prerequisites
-- Node.js 18.18.0 or higher
+- Node.js 18.18.0 or higher (Node 20+ recommended)
 - npm 9+ (or pnpm / yarn)
-- Running instance of the WedPlan Express server (`wedplan-server`) on port 5001
+- Running instance of the WedPlan Express backend (`wedplan-server`) on port 5001
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/nayancsbd/wedplan-client.git
-cd wedplan-client
+git clone https://github.com/nayancsbd/Wedplan-Client.git
+cd Wedplan-Client
 ```
 
 ### 3. Install Dependencies
@@ -112,11 +127,11 @@ cd wedplan-client
 npm install
 ```
 
-### 4. Configure Environment
+### 4. Configure Environment Variables
 ```bash
 cp .env.example .env
 ```
-Ensure `API_URL` points to your backend instance:
+Ensure the API URLs match your running backend instance:
 ```env
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 API_URL=http://localhost:5001
@@ -129,7 +144,7 @@ npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 6. Verification Commands
+### 6. Build and Verification
 ```bash
 npx tsc --noEmit
 npm run lint
@@ -138,63 +153,95 @@ npm run build
 
 ---
 
-## Vercel Deployment & Rewrites Proxy
+## Production Deployment & Proxy Architecture
 
 ### Rewrites Proxy Architecture
-To avoid CORS issues and allow secure cookie forwarding between client and server across different domains, Next.js acts as a reverse proxy in `next.config.ts`:
+To prevent third-party cookie restrictions and cross-origin resource sharing (CORS) issues across different deployment domains, Next.js acts as a reverse proxy in `next.config.ts`:
 
-- Any request originating from the browser to `/api/:path*` is proxied server-side to `${API_URL}/api/:path*`.
-- Better Auth sessions and cookies (`better-auth.session_token`, `__Secure-better-auth.session_token`) attach to the same origin, preventing cross-site cookie blocking.
+- Any browser request to `/api/:path*` is proxied server-side to `${API_URL}/api/:path*`.
+- Better Auth session cookies (`better-auth.session_token`, `__Secure-better-auth.session_token`) remain first-party to the frontend domain, ensuring seamless authentication in modern browsers with strict cookie policies.
 
 ### Production Route Reloading Guarantee
-- All Next.js routes, including dynamic routes like `/services/[id]` and dashboard subroutes (`/dashboard/vendor/services`, `/dashboard/customer/bookings`), are rendered via the App Router.
-- In `proxy.ts`, protected route checks inspect session cookies and allow legitimate browser refreshes to load without 404 or 504 errors.
-- Dynamic route data fetching implements graceful fallbacks, loading skeletons, and retry controls if the backend undergoes temporary cold starts.
+- All Next.js routes, including dynamic routes like `/services/[id]` and nested dashboard paths (`/dashboard/vendor/services`, `/dashboard/customer/bookings`), are fully supported by the Next.js App Router.
+- In `proxy.ts`, protected route guards inspect session cookies and allow legitimate browser page reloads without producing 404 or 504 errors.
+- Asynchronous data fetchers implement graceful error states, loading skeletons, and retry mechanisms.
 
 ---
 
-## Vercel + Google OAuth Redirect URI Checklist
+## Google Cloud Console OAuth 2.0 Setup
 
-When configuring Google OAuth credentials in the Google Cloud Console for production on Vercel:
+When configuring Google OAuth credentials for development and production:
 
-1. **Google Cloud Console Setup**:
-   - Go to **APIs & Services > Credentials**.
-   - Select your **OAuth 2.0 Client ID**.
+1. **Google Cloud Console**: Navigate to **APIs & Services > Credentials** and select your OAuth 2.0 Client ID.
 2. **Authorized JavaScript Origins**:
-   -  (Local development)
-   -  (Your production Vercel domain)
-   -  (If using a custom domain)
+   - `http://localhost:3000` (Local development)
+   - `https://your-production-app.vercel.app` (Production client domain)
 3. **Authorized Redirect URIs**:
-   -  (Proxied locally)
-   -  (Direct server locally)
-   -  (Production client domain via proxy)
-   -  (Production server direct)
-4. **Backend Environment Variables**:
-   - Update `CLIENT_URL` in the server environment to your Vercel URL ().
-   - Update `BETTER_AUTH_URL` to the production backend URL ().
-   - Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`.
+   - `http://localhost:3000/api/auth/callback/google` (Proxied locally)
+   - `http://localhost:5001/api/auth/callback/google` (Direct server locally)
+   - `https://your-production-app.vercel.app/api/auth/callback/google` (Production client domain via proxy)
+   - `https://your-production-api.com/api/auth/callback/google` (Production server direct)
+4. **Backend Sync**: Ensure `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set in the backend environment.
 
 ---
 
-## Stripe Webhook Registration Checklist
+## Stripe Webhook Setup
 
-When configuring Stripe Checkout subscriptions for production:
+When configuring Stripe Checkout subscriptions:
 
-1. **Stripe Dashboard Setup**:
-   - Go to **Developers > Webhooks** in the Stripe Dashboard (Test or Live mode).
-   - Click **Add an endpoint**.
+1. **Stripe Dashboard**: Navigate to **Developers > Webhooks** (Test mode or Live mode).
 2. **Endpoint URL**:
-   - URL: 
-   - Alternatively, if proxying through Vercel: 
-3. **Select Events to Listen For**:
+   - Local testing via Stripe CLI:
+     ```bash
+     stripe listen --forward-to localhost:5001/api/webhooks/stripe
+     ```
+   - Production endpoint:
+     ```
+     https://your-production-api.com/api/webhooks/stripe
+     ```
+3. **Events to Listen For**:
    - `checkout.session.completed`
-   - `invoice.payment_succeeded`
+   - `invoice.paid`
+   - `invoice.payment_failed`
    - `customer.subscription.deleted`
    - `customer.subscription.updated`
-4. **Environment Variables**:
-   - Copy the **Signing secret** (`whsec_...`) into your backend environment as `STRIPE_WEBHOOK_SECRET`.
-   - Set `STRIPE_SECRET_KEY` (`sk_test_...` or `sk_live_...`).
-   - Set `STRIPE_PREMIUM_PRICE_ID` (`price_...`).
-5. **Verify Webhook Delivery**:
-   - Run a test checkout session on `/dashboard/vendor/subscription`.
-   - In Stripe Dashboard, inspect the webhook delivery logs and confirm an HTTP `200 OK` response.
+   - `checkout.session.expired`
+4. **Webhook Secret**: Assign the signing secret (`whsec_...`) to `STRIPE_WEBHOOK_SECRET` in the backend environment.
+
+---
+
+## Submission & Test Instructions
+
+### Seeded Credentials
+
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **Admin** | `admin680970@wedplan.com` | Configured via server seed |
+| **Vendor (Free)** | Register via `/signup` with role **Vendor** | Any valid 8+ char password |
+| **Customer** | Register via `/signup` with role **Customer** | Any valid 8+ char password |
+
+### Verification Scenarios
+
+1. **Customer Flow**:
+   - Browse listings on `/services`, use the debounced search bar, apply category and location filters, and change sort order.
+   - Click a service card to view package details on `/services/[id]`.
+   - Click **Book This Service**; note that optional special requests can be left blank.
+   - Navigate to `/dashboard/customer/bookings` to inspect the submitted booking.
+   - Cancel the pending booking and confirm the status badge updates to `cancelled`.
+
+2. **Vendor Flow**:
+   - Log in as a Vendor and navigate to `/dashboard/vendor/services/new`.
+   - Upload photos to ImgBB, toggle between `Fill` and `Fit Whole Photo`, and inspect the photo preview dialog.
+   - Publish up to 3 services; attempting a 4th service triggers the Featured Pro upgrade prompt.
+   - Go to `/dashboard/vendor/subscription`, click **Upgrade to Featured Pro**, complete the Stripe test checkout (card `4242 4242 4242 4242`), and observe instant plan activation.
+   - Review incoming booking inquiries on `/dashboard/vendor/booking-requests` and test the **Accept** and **Reject** buttons.
+
+3. **Admin Flow**:
+   - Log in with the administrative credentials.
+   - Go to `/dashboard/admin/services` and inspect pending listings; approve or reject them and observe instant directory updates.
+   - Go to `/dashboard/admin/users`, search by name or email, and test the **Block/Unblock** toggles.
+   - Visit `/dashboard/admin/transactions` to inspect the read-only Stripe payment ledger.
+
+4. **Security & Route Guard Checks**:
+   - Attempt to manually access `/dashboard/admin` while logged in as a Customer; verify that the application renders the 403 Access Denied view with convenient return buttons.
+   - Perform full-page reloads on any nested dashboard route (`/dashboard/customer/bookings`, `/dashboard/vendor/services`); verify the session persists without 404 or 504 errors.
