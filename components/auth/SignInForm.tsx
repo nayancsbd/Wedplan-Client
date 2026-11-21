@@ -11,6 +11,7 @@ import { Heart, Eye, EyeOff, Loader2, LogIn, AlertCircle } from "lucide-react"
 
 import { authClient } from "@/lib/auth-client"
 import { useAuth } from "@/hooks/use-auth"
+import { getAuthToken } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -155,6 +156,8 @@ export function SignInForm() {
       }
 
       toast.success("Welcome back to WedPlan!")
+
+      await getAuthToken().catch(() => null)
 
       const userRole = signedInUser?.role || "customer"
       const target =

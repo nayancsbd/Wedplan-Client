@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { Search, X, ChevronLeft, ChevronRight, Filter, AlertCircle, RotateCcw } from "lucide-react"
 
 import { useAuth } from "@/hooks/use-auth"
+import { apiFetch } from "@/lib/api"
 import { ServiceCard } from "@/components/shared/ServiceCard"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -29,9 +30,37 @@ const SORT_OPTIONS = [
   { value: "newest", label: "Newest Listings" },
   { value: "price_asc", label: "Price: Low to High" },
   { value: "price_desc", label: "Price: High to Low" },
+  { value: "rating", label: "Highest Rated" },
+]
+
+const DEFAULT_LOCATIONS = [
+  "New York, NY",
+  "Los Angeles, CA",
+  "Chicago, IL",
+  "Miami, FL",
+  "Napa Valley, CA",
+  "Austin, TX",
+  "Seattle, WA",
+  "Charleston, SC",
+  "San Francisco, CA",
+  "Denver, CO",
 ]
 
 const PAGE_SIZE = 9
+
+function normalizeSort(val: string): "newest" | "price_asc" | "price_desc" | "rating" {
+  const s = (val || "").toLowerCase().trim()
+  if (s === "price_asc" || s === "asc" || s === "price-asc" || s === "low_to_high" || s === "price_low") {
+    return "price_asc"
+  }
+  if (s === "price_desc" || s === "desc" || s === "price-desc" || s === "high_to_low" || s === "price_high") {
+    return "price_desc"
+  }
+  if (s === "rating" || s === "highest_rated") {
+    return "rating"
+  }
+  return "newest"
+}
 
 export function ServicesCatalog() {
   const router = useRouter()
@@ -42,7 +71,8 @@ export function ServicesCatalog() {
   const querySearch = searchParams.get("search") || ""
   const queryCategory = searchParams.get("category") || "all"
   const queryLocation = searchParams.get("location") || "all"
-  const querySort = searchParams.get("sort") || "newest"
+  const rawSort = searchParams.get("sort") || "newest"
+  const activeSort = normalizeSort(rawSort)
   const queryPage = parseInt(searchParams.get("page") || "1", 10) || 1
 
   const [prevQuerySearch, setPrevQuerySearch] = React.useState(querySearch)
@@ -53,7 +83,7 @@ export function ServicesCatalog() {
     setSearchInput(querySearch)
   }
 
-  const [locations, setLocations] = React.useState<string[]>([])
+  const [locations, setLocations] = React.useState<string[]>(DEFAULT_LOCATIONS)
   const [services, setServices] = React.useState<ServiceItem[]>([])
   const [totalCount, setTotalCount] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
@@ -82,19 +112,15 @@ export function ServicesCatalog() {
             locs = json.data.locations
           }
 
-          const uniqueLocs = Array.from(
-            new Set(
-              locs.filter(
-                (l) => typeof l === "string" && l.trim().length > 0
-              )
-            )
+          const validLocs = locs.filter(
+            (l): l is string => typeof l === "string" && l.trim().length > 0
           )
-          setLocations(uniqueLocs)
+
+          if (validLocs.length > 0) {
+            setLocations((prev) => Array.from(new Set([...prev, ...validLocs])))
+          }
         }
       } catch {
-        if (isMounted) {
-          setLocations([])
-        }
       }
     }
 
@@ -112,6 +138,7 @@ export function ServicesCatalog() {
       location?: string
       sort?: string
       page?: number
+      replace?: boolean
     }) => {
       const params = new URLSearchParams(searchParams.toString())
 
@@ -122,7 +149,7 @@ export function ServicesCatalog() {
       const locVal =
         newParams.location !== undefined ? newParams.location : queryLocation
       const sortVal =
-        newParams.sort !== undefined ? newParams.sort : querySort
+        newParams.sort !== undefined ? newParams.sort : activeSort
       const pageVal =
         newParams.page !== undefined ? newParams.page : queryPage
 
@@ -158,15 +185,19 @@ export function ServicesCatalog() {
 
       const queryString = params.toString()
       const destination = queryString ? `${pathname}?${queryString}` : pathname
-      router.push(destination, { scroll: false })
+      if (newParams.replace) {
+        router.replace(destination, { scroll: false })
+      } else {
+        router.push(destination, { scroll: false })
+      }
     },
-    [router, pathname, searchParams, querySearch, queryCategory, queryLocation, querySort, queryPage]
+    [router, pathname, searchParams, querySearch, queryCategory, queryLocation, activeSort, queryPage]
   )
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
       if (searchInput !== querySearch) {
-        updateQueryParams({ search: searchInput, page: 1 })
+        updateQueryParams({ search: searchInput, page: 1, replace: true })
       }
     }, 350)
 
@@ -186,68 +217,134 @@ export function ServicesCatalog() {
         if (querySearch.trim()) queryParams.set("search", querySearch.trim())
         if (queryCategory !== "all") queryParams.set("category", queryCategory)
         if (queryLocation !== "all") queryParams.set("location", queryLocation)
-        if (querySort) queryParams.set("sort", querySort)
+
+        if (activeSort === "price_asc") {
+          queryParams.set("sort", "price_asc")
+          queryParams.set("sortBy", "price")
+          queryParams.set("sortOrder", "asc")
+          queryParams.set("order", "asc")
+        } else if (activeSort === "price_desc") {
+          queryParams.set("sort", "price_desc")
+          queryParams.set("sortBy", "price")
+          queryParams.set("sortOrder", "desc")
+          queryParams.set("order", "desc")
+        } else if (activeSort === "rating") {
+          queryParams.set("sort", "rating")
+          queryParams.set("sortBy", "rating")
+          queryParams.set("order", "desc")
+        } else {
+          queryParams.set("sort", "newest")
+          queryParams.set("sortBy", "createdAt")
+          queryParams.set("order", "desc")
+        }
+
         queryParams.set("page", queryPage.toString())
         queryParams.set("limit", PAGE_SIZE.toString())
 
-        const res = await fetch(`/api/services?${queryParams.toString()}`, {
-          headers: { Accept: "application/json" },
-          cache: "no-store",
+        const json: unknown = await apiFetch(`/api/services?${queryParams.toString()}`, {
+          skipAuth: !isAuthenticated,
         })
 
         if (!isMounted) return
 
-        if (res.ok) {
-          const json: unknown = await res.json()
-          let rawList: unknown[] = []
-          let total = 0
-          let pages = 1
+        let rawList: unknown[] = []
+        let total = 0
+        let pages = 1
 
-          if (Array.isArray(json)) {
-            rawList = json
-            total = json.length
-            pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
-          } else if (json && typeof json === "object") {
-            const jsonObj = json as Record<string, unknown>
-            const dataObj = jsonObj.data as Record<string, unknown> | undefined
+        if (Array.isArray(json)) {
+          rawList = json
+          total = json.length
+          pages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+        } else if (json && typeof json === "object") {
+          const jsonObj = json as Record<string, unknown>
+          const dataObj = jsonObj.data as Record<string, unknown> | undefined
 
-            if (dataObj && Array.isArray(dataObj.services)) {
-              rawList = dataObj.services as unknown[]
-              const dataTotal = typeof dataObj.total === "number" ? dataObj.total : undefined
-              const jsonTotal = typeof jsonObj.total === "number" ? jsonObj.total : undefined
-              total = dataTotal ?? jsonTotal ?? rawList.length
+          if (dataObj && Array.isArray(dataObj.services)) {
+            rawList = dataObj.services as unknown[]
+            const dataTotal = typeof dataObj.total === "number" ? dataObj.total : undefined
+            const jsonTotal = typeof jsonObj.total === "number" ? jsonObj.total : undefined
+            total = dataTotal ?? jsonTotal ?? rawList.length
 
-              const dataPages = typeof dataObj.totalPages === "number" ? dataObj.totalPages : undefined
-              const jsonPages = typeof jsonObj.totalPages === "number" ? jsonObj.totalPages : undefined
-              pages = dataPages ?? jsonPages ?? Math.max(1, Math.ceil(total / PAGE_SIZE))
-            } else if (Array.isArray(jsonObj.services)) {
-              rawList = jsonObj.services as unknown[]
-              total = typeof jsonObj.total === "number" ? jsonObj.total : rawList.length
-              pages = typeof jsonObj.totalPages === "number" ? jsonObj.totalPages : Math.max(1, Math.ceil(total / PAGE_SIZE))
-            } else if (Array.isArray(jsonObj.data)) {
-              rawList = jsonObj.data as unknown[]
-              const jsonTotal = typeof jsonObj.total === "number" ? jsonObj.total : undefined
-              const jsonCount = typeof jsonObj.count === "number" ? jsonObj.count : undefined
-              total = jsonTotal ?? jsonCount ?? rawList.length
-              pages = typeof jsonObj.totalPages === "number" ? jsonObj.totalPages : Math.max(1, Math.ceil(total / PAGE_SIZE))
-            }
+            const dataPages = typeof dataObj.totalPages === "number" ? dataObj.totalPages : undefined
+            const jsonPages = typeof jsonObj.totalPages === "number" ? jsonObj.totalPages : undefined
+            pages = dataPages ?? jsonPages ?? Math.max(1, Math.ceil(total / PAGE_SIZE))
+          } else if (Array.isArray(jsonObj.services)) {
+            rawList = jsonObj.services as unknown[]
+            total = typeof jsonObj.total === "number" ? jsonObj.total : rawList.length
+            pages = typeof jsonObj.totalPages === "number" ? jsonObj.totalPages : Math.max(1, Math.ceil(total / PAGE_SIZE))
+          } else if (Array.isArray(jsonObj.data)) {
+            rawList = jsonObj.data as unknown[]
+            const jsonTotal = typeof jsonObj.total === "number" ? jsonObj.total : undefined
+            const jsonCount = typeof jsonObj.count === "number" ? jsonObj.count : undefined
+            total = jsonTotal ?? jsonCount ?? rawList.length
+            pages = typeof jsonObj.totalPages === "number" ? jsonObj.totalPages : Math.max(1, Math.ceil(total / PAGE_SIZE))
           }
-
-          const items = rawList.map(normalizeService)
-          setServices(items)
-          setTotalCount(total)
-          setTotalPages(pages)
-        } else {
-          setIsError(true)
-          setErrorMessage(`Unable to load wedding services (Status ${res.status}).`)
-          setServices([])
-          setTotalCount(0)
-          setTotalPages(1)
         }
-      } catch {
+
+        let items = rawList.map(normalizeService)
+
+        if (queryCategory !== "all") {
+          const cat = queryCategory.toLowerCase()
+          const matched = items.filter(
+            (s) => s.category?.toLowerCase() === cat || s.category?.toLowerCase().includes(cat)
+          )
+          if (matched.length > 0 || total === items.length) {
+            items = matched
+            total = matched.length
+          }
+        }
+
+        if (queryLocation !== "all") {
+          const loc = queryLocation.toLowerCase()
+          const matched = items.filter(
+            (s) => s.location && s.location.toLowerCase().includes(loc)
+          )
+          if (matched.length > 0 || total === items.length) {
+            items = matched
+            total = matched.length
+          }
+        }
+
+        if (querySearch.trim()) {
+          const q = querySearch.trim().toLowerCase()
+          const matched = items.filter(
+            (s) =>
+              s.title.toLowerCase().includes(q) ||
+              (s.vendorName && s.vendorName.toLowerCase().includes(q)) ||
+              (s.category && s.category.toLowerCase().includes(q)) ||
+              (s.location && s.location.toLowerCase().includes(q)) ||
+              (s.description && s.description.toLowerCase().includes(q))
+          )
+          if (matched.length > 0 || total === items.length) {
+            items = matched
+            total = matched.length
+          }
+        }
+
+        if (activeSort === "price_asc") {
+          items = [...items].sort((a, b) => (Number(a.startingPrice) || 0) - (Number(b.startingPrice) || 0))
+        } else if (activeSort === "price_desc") {
+          items = [...items].sort((a, b) => (Number(b.startingPrice) || 0) - (Number(a.startingPrice) || 0))
+        } else if (activeSort === "rating") {
+          items = [...items].sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
+        }
+
+        const discoveredLocations = items
+          .map((s) => s.location)
+          .filter((l): l is string => Boolean(l && l.trim().length > 0))
+
+        if (discoveredLocations.length > 0) {
+          setLocations((prev) => Array.from(new Set([...prev, ...discoveredLocations])))
+        }
+
+        setServices(items)
+        setTotalCount(total)
+        setTotalPages(Math.max(1, pages))
+      } catch (err: unknown) {
         if (isMounted) {
           setIsError(true)
-          setErrorMessage("Network connection error or wedding directory server is currently unavailable.")
+          const msg = err instanceof Error ? err.message : "Unable to load wedding services catalog."
+          setErrorMessage(msg)
           setServices([])
           setTotalCount(0)
           setTotalPages(1)
@@ -264,7 +361,7 @@ export function ServicesCatalog() {
     return () => {
       isMounted = false
     }
-  }, [querySearch, queryCategory, queryLocation, querySort, queryPage, retryTrigger])
+  }, [querySearch, queryCategory, queryLocation, activeSort, queryPage, retryTrigger, isAuthenticated])
 
   const handleClearFilters = () => {
     setSearchInput("")
@@ -279,7 +376,15 @@ export function ServicesCatalog() {
     Boolean(querySearch) ||
     queryCategory !== "all" ||
     queryLocation !== "all" ||
-    querySort !== "newest"
+    activeSort !== "newest"
+
+  const selectableLocations = React.useMemo(() => {
+    const list = Array.from(new Set(locations))
+    if (queryLocation !== "all" && !list.includes(queryLocation)) {
+      list.unshift(queryLocation)
+    }
+    return list
+  }, [locations, queryLocation])
 
   return (
     <div className="space-y-8">
@@ -291,8 +396,9 @@ export function ServicesCatalog() {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search services or vendors..."
-              className="h-10 pl-9 pr-9 bg-background"
+              placeholder="Search services, studios, or locations..."
+              className="h-10 pl-9 pr-9 bg-background focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden"
+              aria-label="Search wedding services"
             />
             {searchInput && (
               <button
@@ -301,8 +407,8 @@ export function ServicesCatalog() {
                   setSearchInput("")
                   updateQueryParams({ search: "", page: 1 })
                 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer p-0.5 rounded-full focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-hidden"
+                aria-label="Clear search query"
               >
                 <X className="size-4" />
               </button>
@@ -316,8 +422,8 @@ export function ServicesCatalog() {
                 onChange={(e) =>
                   updateQueryParams({ category: e.target.value, page: 1 })
                 }
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 pr-8 text-sm text-foreground transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 cursor-pointer"
-                aria-label="Filter by category"
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 pr-8 text-sm text-foreground transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                aria-label="Filter services by category"
               >
                 {CATEGORY_OPTIONS.map((cat) => (
                   <option key={cat.value} value={cat.value}>
@@ -335,11 +441,11 @@ export function ServicesCatalog() {
                 onChange={(e) =>
                   updateQueryParams({ location: e.target.value, page: 1 })
                 }
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 pr-8 text-sm text-foreground transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 cursor-pointer"
-                aria-label="Filter by location"
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 pr-8 text-sm text-foreground transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                aria-label="Filter services by location"
               >
                 <option value="all">All Locations</option>
-                {locations.map((loc) => (
+                {selectableLocations.map((loc) => (
                   <option key={loc} value={loc}>
                     {loc}
                   </option>
@@ -351,12 +457,12 @@ export function ServicesCatalog() {
           <div className="lg:col-span-2">
             <div className="relative">
               <select
-                value={querySort}
+                value={activeSort}
                 onChange={(e) =>
                   updateQueryParams({ sort: e.target.value, page: 1 })
                 }
-                className="h-10 w-full rounded-lg border border-input bg-background px-3 pr-8 text-sm text-foreground transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 cursor-pointer"
-                aria-label="Sort listings"
+                className="h-10 w-full rounded-lg border border-input bg-background px-3 pr-8 text-sm text-foreground transition-colors focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary cursor-pointer"
+                aria-label="Sort services by price or newest"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -370,7 +476,7 @@ export function ServicesCatalog() {
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3 text-xs">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-muted-foreground flex items-center gap-1">
+            <span className="text-muted-foreground flex items-center gap-1 font-medium">
               <Filter className="size-3 text-primary" />
               Active filters:
             </span>
@@ -401,7 +507,7 @@ export function ServicesCatalog() {
                 className="gap-1 rounded-md px-2 py-0.5 text-xs font-normal"
               >
                 Category:{" "}
-                {CATEGORY_OPTIONS.find((c) => c.value === queryCategory)?.label}
+                {CATEGORY_OPTIONS.find((c) => c.value === queryCategory)?.label || queryCategory}
                 <button
                   type="button"
                   onClick={() => updateQueryParams({ category: "all", page: 1 })}
@@ -430,12 +536,12 @@ export function ServicesCatalog() {
               </Badge>
             )}
 
-            {querySort !== "newest" && (
+            {activeSort !== "newest" && (
               <Badge
                 variant="secondary"
                 className="gap-1 rounded-md px-2 py-0.5 text-xs font-normal"
               >
-                Sort: {SORT_OPTIONS.find((s) => s.value === querySort)?.label}
+                Sort: {SORT_OPTIONS.find((s) => s.value === activeSort)?.label}
                 <button
                   type="button"
                   onClick={() => updateQueryParams({ sort: "newest", page: 1 })}
@@ -458,7 +564,7 @@ export function ServicesCatalog() {
             )}
 
             {!hasActiveFilters && (
-              <span className="text-muted-foreground italic">None (Showing all)</span>
+              <span className="text-muted-foreground italic">None (Showing all services)</span>
             )}
           </div>
 

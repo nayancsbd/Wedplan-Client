@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
-import { clearTokenCache } from "@/lib/api"
+import { clearTokenCache, getAuthToken } from "@/lib/api"
 import type { User, UserRole } from "@/types"
 
 export interface AuthUser extends Partial<User> {
@@ -39,6 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const user = (sessionData?.user as unknown as AuthUser) || null
   const role = (user?.role as UserRole) || null
   const isAuthenticated = !!user
+
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      getAuthToken().catch(() => null)
+    }
+  }, [isAuthenticated])
 
   const handleSignOut = React.useCallback(async () => {
     clearTokenCache()

@@ -52,13 +52,25 @@ export interface VendorServiceRecord extends ServiceItem {
 }
 
 const CATEGORIES = [
-  { value: "photography", label: "Photography & Videography" },
-  { value: "venue", label: "Wedding Venues" },
-  { value: "decor", label: "Decoration & Florist" },
-  { value: "catering", label: "Catering Services" },
-  { value: "hair_makeup", label: "Makeup & Styling" },
-  { value: "attire", label: "Wedding Fashion" },
+  { value: "Photography & Videography", label: "Photography & Videography" },
+  { value: "Wedding Venues", label: "Wedding Venues" },
+  { value: "Decoration & Florist", label: "Decoration & Florist" },
+  { value: "Catering Services", label: "Catering Services" },
+  { value: "Makeup & Styling", label: "Makeup & Styling" },
+  { value: "Wedding Fashion", label: "Wedding Fashion" },
 ]
+
+const CATEGORY_MAP: Record<string, string> = {
+  photography: "Photography & Videography",
+  venue: "Wedding Venues",
+  venues: "Wedding Venues",
+  decor: "Decoration & Florist",
+  catering: "Catering Services",
+  hair_makeup: "Makeup & Styling",
+  makeup: "Makeup & Styling",
+  attire: "Wedding Fashion",
+  fashion: "Wedding Fashion",
+}
 
 export default function VendorServicesPage() {
   const [services, setServices] = React.useState<VendorServiceRecord[]>([])
@@ -145,13 +157,19 @@ export default function VendorServicesPage() {
     )
 
     try {
-      await api.patch(`/api/services/${service.id}`, {
-        isActive: updatedActive,
-      }).catch(async () => {
-        await api.patch(`/api/services/${service.id}/availability`, {
+      try {
+        await api.patch(`/api/vendor/services/${service.id}/availability`, {
           isActive: updatedActive,
         })
-      })
+      } catch {
+        await api.patch(`/api/services/${service.id}/availability`, {
+          isActive: updatedActive,
+        }).catch(async () => {
+          await api.patch(`/api/services/${service.id}`, {
+            isActive: updatedActive,
+          })
+        })
+      }
 
       toast.success(
         updatedActive
@@ -178,33 +196,33 @@ export default function VendorServicesPage() {
 
     const formData = new FormData(e.currentTarget)
     const title = (formData.get("name") as string) || editingService.title
-    const category = (formData.get("category") as string) || editingService.category
+    const rawCategory = (formData.get("category") as string) || editingService.category
+    const category = CATEGORY_MAP[rawCategory] || rawCategory
     const price = Number(formData.get("price") || editingService.startingPrice)
     const location = (formData.get("location") as string) || editingService.location || ""
     const description = (formData.get("description") as string) || editingService.description || ""
 
     setIsSavingEdit(true)
 
+    const editPayload = {
+      serviceName: title,
+      name: title,
+      title,
+      category,
+      price,
+      startingPrice: price,
+      location,
+      description,
+    }
+
     try {
-      await api.patch(`/api/services/${editingService.id}`, {
-        title,
-        name: title,
-        category,
-        price,
-        startingPrice: price,
-        location,
-        description,
-      }).catch(async () => {
-        await api.put(`/api/services/${editingService.id}`, {
-          title,
-          name: title,
-          category,
-          price,
-          startingPrice: price,
-          location,
-          description,
+      try {
+        await api.put(`/api/vendor/services/${editingService.id}`, editPayload)
+      } catch {
+        await api.put(`/api/services/${editingService.id}`, editPayload).catch(async () => {
+          await api.patch(`/api/services/${editingService.id}`, editPayload)
         })
-      })
+      }
 
       setServices((prev) =>
         prev.map((s) =>
@@ -238,7 +256,11 @@ export default function VendorServicesPage() {
     setIsDeleting(true)
 
     try {
-      await api.delete(`/api/services/${serviceToDelete.id}`).catch(() => null)
+      try {
+        await api.delete(`/api/vendor/services/${serviceToDelete.id}`)
+      } catch {
+        await api.delete(`/api/services/${serviceToDelete.id}`).catch(() => null)
+      }
 
       setServices((prev) => prev.filter((s) => s.id !== serviceToDelete.id))
       toast.success(`"${serviceToDelete.title}" was successfully deleted`)
