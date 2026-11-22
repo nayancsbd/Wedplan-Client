@@ -3,7 +3,9 @@ import type { NextConfig } from "next"
 const apiUrl =
   process.env.API_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:5001"
+  (process.env.NODE_ENV === "production" || process.env.VERCEL
+    ? "https://wedplan-server-nayanbddm.vercel.app"
+    : "http://localhost:5001")
 
 const cleanApiUrl = apiUrl
   .trim()
