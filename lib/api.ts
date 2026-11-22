@@ -328,11 +328,17 @@ export async function apiFetch<T = unknown>(
     } catch {
     }
 
-    const message =
+    const rawMessage =
       errorData?.message ||
       errorData?.error ||
       response.statusText ||
       `Request failed with status ${response.status}`
+    const message =
+      typeof rawMessage === "string"
+        ? rawMessage
+        : typeof rawMessage === "object"
+        ? JSON.stringify(rawMessage)
+        : String(rawMessage)
     const errors = errorData?.errors
 
     throw new ApiError(response.status, message, errors)
