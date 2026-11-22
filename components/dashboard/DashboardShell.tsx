@@ -73,12 +73,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const [isCollapsed, setIsCollapsed] = React.useState(false)
   const [isMobileOpen, setIsMobileOpen] = React.useState(false)
-  const [prevPathname, setPrevPathname] = React.useState(pathname)
-
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname)
+  React.useEffect(() => {
     setIsMobileOpen(false)
-  }
+  }, [pathname])
 
   const isUnauthorizedRole = React.useMemo(() => {
     if (isPending || !isAuthenticated || !role) return false

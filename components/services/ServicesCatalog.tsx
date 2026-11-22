@@ -75,13 +75,11 @@ export function ServicesCatalog() {
   const activeSort = normalizeSort(rawSort)
   const queryPage = parseInt(searchParams.get("page") || "1", 10) || 1
 
-  const [prevQuerySearch, setPrevQuerySearch] = React.useState(querySearch)
   const [searchInput, setSearchInput] = React.useState(querySearch)
 
-  if (querySearch !== prevQuerySearch) {
-    setPrevQuerySearch(querySearch)
+  React.useEffect(() => {
     setSearchInput(querySearch)
-  }
+  }, [querySearch])
 
   const [locations, setLocations] = React.useState<string[]>(DEFAULT_LOCATIONS)
   const [services, setServices] = React.useState<ServiceItem[]>([])
@@ -343,7 +341,19 @@ export function ServicesCatalog() {
       } catch (err: unknown) {
         if (isMounted) {
           setIsError(true)
-          const msg = err instanceof Error ? err.message : "Unable to load wedding services catalog."
+          let msg = "Unable to load wedding services catalog."
+          if (typeof err === "string" && err.trim()) {
+            msg = err.trim()
+          } else if (err instanceof Error && err.message) {
+            msg = err.message === "[object Object]" ? "Unable to connect to wedding services catalog." : err.message
+          } else if (err && typeof err === "object") {
+            const obj = err as Record<string, unknown>
+            if (typeof obj.message === "string") {
+              msg = obj.message
+            } else if (typeof obj.error === "string") {
+              msg = obj.error
+            }
+          }
           setErrorMessage(msg)
           setServices([])
           setTotalCount(0)

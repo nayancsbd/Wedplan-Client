@@ -106,13 +106,11 @@ function AdminServicesContent() {
     setRefreshTrigger((prev) => prev + 1)
   }, [])
 
-  const [prevParam, setPrevParam] = React.useState(initialStatusParam)
-  if (initialStatusParam !== prevParam) {
-    setPrevParam(initialStatusParam)
+  React.useEffect(() => {
     if (initialStatusParam && ["pending", "approved", "rejected", "all"].includes(initialStatusParam)) {
       setStatusFilter(initialStatusParam as StatusFilter)
     }
-  }
+  }, [initialStatusParam])
 
   React.useEffect(() => {
     let isMounted = true

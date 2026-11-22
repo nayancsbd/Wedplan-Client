@@ -8,6 +8,7 @@ import { normalizeService, ServiceItem } from "@/lib/service-utils"
 import { ServiceDetailView } from "@/components/services/ServiceDetailView"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { Skeleton } from "@/components/ui/skeleton"
+import { apiFetch } from "@/lib/api"
 
 interface ServiceDetailPageClientProps {
   id: string
@@ -30,51 +31,53 @@ export function ServiceDetailPageClient({ id }: ServiceDetailPageClientProps) {
 
     const fetchService = async () => {
       try {
-        const res = await fetch(`/api/services/${encodeURIComponent(id)}`, {
-          headers: { Accept: "application/json" },
-          cache: "no-store",
-        })
+        const json = await apiFetch<Record<string, unknown>>(
+          `/api/services/${encodeURIComponent(id)}`,
+          {
+            skipAuth: false,
+            cache: "no-store",
+          }
+        )
 
         if (!isMounted) return
 
-        if (res.ok) {
-          const json: unknown = await res.json()
-          let rawData: unknown = null
+        let rawData: unknown = null
 
-          if (json && typeof json === "object") {
-            const jsonObj = json as Record<string, unknown>
-            if (jsonObj.data && typeof jsonObj.data === "object") {
-              const dataObj = jsonObj.data as Record<string, unknown>
-              rawData = dataObj.service || dataObj
-            } else if (jsonObj.service) {
-              rawData = jsonObj.service
-            } else {
-              rawData = jsonObj
-            }
-          }
-
-          if (rawData && typeof rawData === "object") {
-            const normalized = normalizeService(rawData)
-            if (!normalized.id) {
-              normalized.id = id
-            }
-            setService(normalized)
-            setIsError(false)
+        if (json && typeof json === "object") {
+          if (json.data && typeof json.data === "object") {
+            const dataObj = json.data as Record<string, unknown>
+            rawData = dataObj.service || dataObj
+          } else if (json.service) {
+            rawData = json.service
           } else {
-            setIsError(true)
-            setErrorMessage("Service data was not in expected format.")
-          }
-        } else {
-          setIsError(true)
-          if (res.status === 404) {
-            setErrorMessage("The wedding service you requested could not be found.")
-          } else {
-            setErrorMessage(`Unable to load service details (Status ${res.status}).`)
+            rawData = json
           }
         }
-      } catch {
-        if (isMounted) {
+
+        if (rawData && typeof rawData === "object") {
+          const normalized = normalizeService(rawData)
+          if (!normalized.id) {
+            normalized.id = id
+          }
+          setService(normalized)
+          setIsError(false)
+        } else {
           setIsError(true)
+          setErrorMessage("Service data was not in expected format.")
+        }
+      } catch (err: unknown) {
+        if (!isMounted) return
+        setIsError(true)
+        if (
+          err &&
+          typeof err === "object" &&
+          "status" in err &&
+          (err as { status: number }).status === 404
+        ) {
+          setErrorMessage("The wedding service you requested could not be found.")
+        } else if (err instanceof Error && err.message) {
+          setErrorMessage(err.message)
+        } else {
           setErrorMessage("Network issue or server unavailable.")
         }
       } finally {

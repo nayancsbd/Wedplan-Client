@@ -12,13 +12,45 @@ export class ApiError extends Error {
   success: boolean
   errors?: Record<string, string[] | string> | unknown
 
-  constructor(status: number, message: string, errors?: unknown) {
-    super(message)
+  constructor(status: number, message: unknown, errors?: unknown) {
+    const cleanMessage =
+      typeof message === "string" && message.trim()
+        ? message.trim()
+        : message && typeof message === "object"
+        ? (message as { message?: string }).message ||
+          (message as { error?: string }).error ||
+          JSON.stringify(message)
+        : String(message || "An unexpected error occurred")
+    super(cleanMessage)
     this.name = "ApiError"
     this.status = status
     this.success = false
     this.errors = errors
   }
+}
+
+function extractErrorMessage(data: unknown, fallback: string): string {
+  if (!data) return fallback
+  if (typeof data === "string" && data.trim()) return data.trim()
+  if (typeof data === "object") {
+    const obj = data as Record<string, unknown>
+    if (typeof obj.message === "string" && obj.message.trim()) return obj.message.trim()
+    if (typeof obj.error === "string" && obj.error.trim()) return obj.error.trim()
+    if (obj.error && typeof obj.error === "object") {
+      const nested = obj.error as Record<string, unknown>
+      if (typeof nested.message === "string" && nested.message.trim()) return nested.message.trim()
+    }
+    if (obj.message && typeof obj.message === "object") {
+      const nested = obj.message as Record<string, unknown>
+      if (typeof nested.message === "string" && nested.message.trim()) return nested.message.trim()
+    }
+    try {
+      return JSON.stringify(data)
+    } catch {
+      return fallback
+    }
+  }
+  return String(data)
 }
 
 interface TokenCache {
@@ -280,35 +312,37 @@ export async function apiFetch<T = unknown>(
       }
     }
 
-    let errorData: ApiErrorPayload | null = null
+    let errorData: unknown = null
     try {
-      errorData = (await response.json()) as ApiErrorPayload
+      errorData = await response.json()
     } catch {
     }
 
-    const message =
-      errorData?.message ||
-      errorData?.error ||
+    const message = extractErrorMessage(
+      errorData,
       "Session expired. Please sign in to continue."
-    const errors = errorData?.errors
+    )
+    const errors = (errorData as ApiErrorPayload | null)?.errors
 
-    redirectToSignIn()
+    if (!skipAuth) {
+      redirectToSignIn()
+    }
 
     throw new ApiError(401, message, errors)
   }
 
   if (response.status === 403) {
-    let errorData: ApiErrorPayload | null = null
+    let errorData: unknown = null
     try {
-      errorData = (await response.json()) as ApiErrorPayload
+      errorData = await response.json()
     } catch {
     }
 
-    const message =
-      errorData?.message ||
-      errorData?.error ||
+    const message = extractErrorMessage(
+      errorData,
       "Access Denied: You do not have permission to view this resource or perform this action."
-    const errors = errorData?.errors
+    )
+    const errors = (errorData as ApiErrorPayload | null)?.errors
 
     if (
       typeof window !== "undefined" &&
@@ -322,24 +356,17 @@ export async function apiFetch<T = unknown>(
   }
 
   if (!response.ok) {
-    let errorData: ApiErrorPayload | null = null
+    let errorData: unknown = null
     try {
-      errorData = (await response.json()) as ApiErrorPayload
+      errorData = await response.json()
     } catch {
     }
 
-    const rawMessage =
-      errorData?.message ||
-      errorData?.error ||
-      response.statusText ||
-      `Request failed with status ${response.status}`
-    const message =
-      typeof rawMessage === "string"
-        ? rawMessage
-        : typeof rawMessage === "object"
-        ? JSON.stringify(rawMessage)
-        : String(rawMessage)
-    const errors = errorData?.errors
+    const message = extractErrorMessage(
+      errorData,
+      response.statusText || `Request failed with status ${response.status}`
+    )
+    const errors = (errorData as ApiErrorPayload | null)?.errors
 
     throw new ApiError(response.status, message, errors)
   }
@@ -379,7 +406,11 @@ export function installFetchInterceptor(): void {
       urlString.includes("/api/auth") ||
       urlString.includes("/api/health")
 
-    if (!isApiRequest || isAuthBypass) {
+    const isPublicService =
+      (urlString.startsWith("/api/services") || urlString.includes("/api/services")) &&
+      (!init?.method || init.method.toUpperCase() === "GET")
+
+    if (!isApiRequest || isAuthBypass || isPublicService) {
       return originalFetch(input, init)
     }
 
