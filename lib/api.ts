@@ -181,7 +181,7 @@ export async function getAuthToken(): Promise<string | null> {
     }
   }
 
-  return refreshAuthToken()
+  return null
 }
 
 export interface ApiFetchOptions extends Omit<RequestInit, "body"> {
@@ -193,7 +193,16 @@ export interface ApiFetchOptions extends Omit<RequestInit, "body"> {
 function redirectToSignIn(): void {
   if (typeof window === "undefined") return
   const pathname = window.location.pathname
-  if (pathname.startsWith("/signin") || pathname.startsWith("/signup")) return
+  if (
+    pathname.startsWith("/signin") ||
+    pathname.startsWith("/signup") ||
+    pathname === "/" ||
+    pathname.startsWith("/services") ||
+    pathname.startsWith("/about") ||
+    pathname.startsWith("/contact")
+  ) {
+    return
+  }
 
   const currentPath = pathname + window.location.search
   const redirectTarget =
@@ -360,11 +369,9 @@ export function installFetchInterceptor(): void {
     const isApiRequest = urlString.startsWith("/api/") || urlString.includes("/api/")
 
     const isAuthBypass =
-      urlString.includes("/api/auth/token") ||
-      urlString.includes("/api/auth/refresh-token") ||
-      urlString.includes("/api/auth/sign-in") ||
-      urlString.includes("/api/auth/sign-up") ||
-      urlString.includes("/api/auth/callback")
+      urlString.includes("/api/auth/") ||
+      urlString.includes("/api/auth") ||
+      urlString.includes("/api/health")
 
     if (!isApiRequest || isAuthBypass) {
       return originalFetch(input, init)

@@ -5,7 +5,7 @@ WedPlan is a full-featured, role-based wedding planning web application inspired
 ---
 
 ## Repositories
-- **Live Demo**: [https://wedplan.nayanc.dev](https://wedplan.nayanc.dev/)
+- **Live Demo**: [https://wedplan-client-nayanbddm.vercel.app](https://wedplan-client-nayanbddm.vercel.app)
 - **Client Repository**: [https://github.com/nayancsbd/Wedplan-Client](https://github.com/nayancsbd/Wedplan-Client)
 - **Server Repository**: [https://github.com/nayancsbd/Wedplan-Server](https://github.com/nayancsbd/Wedplan-Server)
 

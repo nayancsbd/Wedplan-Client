@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
-import { clearTokenCache, getAuthToken } from "@/lib/api"
+import { clearTokenCache, getAuthToken, refreshAuthToken } from "@/lib/api"
 import type { User, UserRole } from "@/types"
 
 export interface AuthUser extends Partial<User> {
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     if (isAuthenticated) {
-      getAuthToken().catch(() => null)
+      refreshAuthToken().catch(() => null)
     }
   }, [isAuthenticated])
 

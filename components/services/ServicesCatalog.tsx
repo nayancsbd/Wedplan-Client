@@ -653,9 +653,7 @@ export function ServicesCatalog() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((item) => {
-            const detailHref = isAuthenticated
-              ? `/services/${item.id}`
-              : `/signin?callbackUrl=${encodeURIComponent(`/services/${item.id}`)}`
+            const detailHref = `/services/${item.id}`
 
             return (
               <ServiceCard
