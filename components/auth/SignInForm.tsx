@@ -86,9 +86,9 @@ export function SignInForm() {
           : user.role === "vendor"
           ? "/dashboard/vendor"
           : "/dashboard/customer")
-      router.replace(target)
+      window.location.assign(target)
     }
-  }, [isAuthChecking, isAuthenticated, user, callbackUrl, router])
+  }, [isAuthChecking, isAuthenticated, user, callbackUrl])
 
   const onSubmit = async (values: SignInFormValues) => {
     setIsSubmitting(true)
@@ -168,7 +168,7 @@ export function SignInForm() {
           ? "/dashboard/vendor"
           : "/dashboard/customer")
 
-      router.push(target)
+      window.location.assign(target)
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : "An unexpected error occurred during sign in"

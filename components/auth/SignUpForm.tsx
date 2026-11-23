@@ -137,9 +137,9 @@ export function SignUpForm() {
           : user.role === "vendor"
           ? "/dashboard/vendor"
           : "/dashboard/customer")
-      router.replace(target)
+      window.location.assign(target)
     }
-  }, [isAuthChecking, isAuthenticated, user, callbackUrl, router])
+  }, [isAuthChecking, isAuthenticated, user, callbackUrl])
 
   const uploadFile = async (file: File) => {
     if (!file.type.startsWith("image/")) {
@@ -257,7 +257,7 @@ export function SignUpForm() {
         (values.role === "vendor"
           ? "/dashboard/vendor"
           : "/dashboard/customer")
-      router.push(target)
+      window.location.assign(target)
     } catch (err: unknown) {
       const errorMsg =
         err instanceof Error ? err.message : "An unexpected error occurred during sign up"

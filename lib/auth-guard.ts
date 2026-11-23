@@ -69,6 +69,32 @@ export async function getServerSession(): Promise<{
         }
       }
     }
+
+    const tokenMatch = cookie.match(/wedplan_jwt_token=([^;]+)/)
+    const token = tokenMatch ? decodeURIComponent(tokenMatch[1].trim()) : null
+
+    const meRes = await fetch(`${apiUrl}/api/me`, {
+      headers: {
+        cookie,
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+        accept: "application/json",
+      },
+      cache: "no-store",
+    }).catch(() => null)
+
+    if (meRes && meRes.ok) {
+      const meData = (await meRes.json().catch(() => null)) as Record<string, any> | null
+      const meUser = (meData?.data?.user || meData?.user || meData?.data) as ServerSessionUser | undefined
+      if (meUser && (meUser.id || (meUser as { _id?: string })._id)) {
+        return {
+          user: {
+            ...meUser,
+            id: String(meUser.id || (meUser as { _id?: string })._id),
+          },
+          session: null,
+        }
+      }
+    }
   } catch {
   }
 

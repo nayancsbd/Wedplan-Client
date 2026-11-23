@@ -103,27 +103,32 @@ export default function VendorSubscriptionPage() {
                 rawArray = txJson
               } else if (txJson && typeof txJson === "object") {
                 const obj = txJson as Record<string, unknown>
-                if (Array.isArray(obj.data)) rawArray = obj.data
-                else if (Array.isArray(obj.transactions)) rawArray = obj.transactions
-                else if (Array.isArray(obj.history)) rawArray = obj.history
+                const dataObj = obj.data as Record<string, unknown> | undefined
+                if (Array.isArray(obj.data)) {
+                  rawArray = obj.data
+                } else if (dataObj && typeof dataObj === "object" && Array.isArray(dataObj.transactions)) {
+                  rawArray = dataObj.transactions
+                } else if (Array.isArray(obj.transactions)) {
+                  rawArray = obj.transactions
+                } else if (Array.isArray(obj.history)) {
+                  rawArray = obj.history
+                }
               }
 
-              if (rawArray.length > 0) {
-                txList = rawArray.map((item, idx) => {
-                  const rec = (item || {}) as Record<string, unknown>
-                  return {
-                    id: String(rec.id || rec._id || rec.stripeId || `tx_${idx + 1}`),
-                    amount: Number(rec.amount || rec.total || 0),
-                    currency: String(rec.currency || "USD").toUpperCase(),
-                    status: String(rec.status || "completed"),
-                    description: String(rec.description || rec.plan || "Premium Vendor Plan"),
-                    plan: String(rec.plan || "Premium"),
-                    createdAt: (rec.createdAt || rec.date || rec.created) as string | undefined,
-                    receiptUrl: (rec.receiptUrl || rec.receipt_url || rec.invoiceUrl) as string | undefined,
-                  }
-                })
-                break
-              }
+              txList = rawArray.map((item, idx) => {
+                const rec = (item || {}) as Record<string, unknown>
+                return {
+                  id: String(rec.id || rec._id || rec.stripeId || rec.stripeSessionId || `tx_${idx + 1}`),
+                  amount: Number(rec.amount || rec.total || 0),
+                  currency: String(rec.currency || "USD").toUpperCase(),
+                  status: String(rec.status || "completed"),
+                  description: String(rec.description || rec.plan || "Premium Vendor Plan"),
+                  plan: String(rec.plan || "Premium"),
+                  createdAt: (rec.createdAt || rec.date || rec.created) as string | undefined,
+                  receiptUrl: (rec.receiptUrl || rec.receipt_url || rec.invoiceUrl) as string | undefined,
+                }
+              })
+              break
             }
           } catch {
             continue

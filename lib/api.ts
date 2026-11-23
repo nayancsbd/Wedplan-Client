@@ -71,6 +71,8 @@ export function setAuthToken(token: string, ttlMs = CACHE_TTL_MS): void {
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem("wedplan_jwt_token", token)
+      const maxAgeSec = Math.floor(ttlMs / 1000)
+      document.cookie = `wedplan_jwt_token=${encodeURIComponent(token)}; path=/; max-age=${maxAgeSec}; SameSite=Lax`
     } catch {
     }
   }
@@ -81,6 +83,7 @@ export function clearTokenCache(): void {
   if (typeof window !== "undefined") {
     try {
       localStorage.removeItem("wedplan_jwt_token")
+      document.cookie = "wedplan_jwt_token=; path=/; max-age=0; SameSite=Lax"
     } catch {
     }
   }
